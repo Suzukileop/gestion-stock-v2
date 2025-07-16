@@ -1,0 +1,78 @@
+<app-header></app-header>
+<section class="min-h-screen bg-gradient-to-br from-purple-200 via-blue-100 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex flex-col items-center py-8 mt-16">
+  <div class="w-full max-w-6xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+      <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Gestion des utilisateurs</h2>
+      <button class="bg-violet-700 hover:bg-violet-800 text-white font-semibold px-6 py-2 rounded-lg transition" (click)="showAddUser = true">+ Ajouter un utilisateur</button>
+    </div>
+    <div class="flex flex-wrap gap-4 mb-6">
+      <select [(ngModel)]="filterRole" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        <option value="">Tous les rôles</option>
+        <option value="CLIENT">Client</option>
+        <option value="RESPONSABLE">Responsable</option>
+        <option value="ADMIN">Admin</option>
+      </select>
+      <select [(ngModel)]="filterStatut" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        <option value="">Tous les statuts</option>
+        <option value="EN_ATTENTE_VALIDATION">En attente</option>
+        <option value="ACTIVE">Actif</option>
+        <option value="REJETE">Rejeté</option>
+      </select>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let user of users | userFilter:filterRole:filterStatut" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-2 border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center text-2xl font-bold text-violet-700 dark:text-violet-300">
+            {{ user.nom.charAt(0) }}{{ user.prenom.charAt(0) }}
+          </div>
+          <div>
+            <div class="font-semibold text-lg text-gray-900 dark:text-white">{{ user.nom }} {{ user.prenom }}</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</div>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2 text-sm text-gray-700 dark:text-gray-200">
+          <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Matricule: {{ user.matricule }}</span>
+          <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Téléphone: {{ user.telephone }}</span>
+        </div>
+        <div class="flex flex-wrap gap-2 text-sm text-gray-700 dark:text-gray-200">
+          <span class="bg-violet-100 dark:bg-violet-900 px-2 py-1 rounded">{{ user.role }}</span>
+          <span class="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">{{ user.unite_administrative }}</span>
+          <span class="bg-green-100 dark:bg-green-900 px-2 py-1 rounded" *ngIf="user.statut === 'ACTIVE'">Actif</span>
+          <span class="bg-yellow-100 dark:bg-yellow-900 px-2 py-1 rounded" *ngIf="user.statut === 'EN_ATTENTE_VALIDATION'">En attente</span>
+          <span class="bg-red-100 dark:bg-red-900 px-2 py-1 rounded" *ngIf="user.statut === 'REJETE'">Rejeté</span>
+        </div>
+        <div class="flex gap-2 mt-4 flex-wrap">
+          <button *ngIf="user.role === 'CLIENT' && user.statut === 'EN_ATTENTE_VALIDATION'" class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded transition" (click)="validateUser(user)">Valider</button>
+          <button *ngIf="user.role === 'CLIENT' && user.statut === 'EN_ATTENTE_VALIDATION'" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-1 rounded transition" (click)="rejectUser(user)">Rejeter</button>
+          <button *ngIf="user.role !== 'ADMIN'" class="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded transition" (click)="deleteUser(user)">Supprimer</button>
+          <button class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-1 rounded transition" (click)="editUser(user)">Modifier</button>
+        </div>
+      </div>
+    </div>
+    <!-- Ajout utilisateur (popup/modal simple) -->
+    <div *ngIf="showAddUser" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 w-full max-w-md relative">
+        <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:hover:text-white" (click)="showAddUser = false">&times;</button>
+        <h3 class="text-xl font-bold mb-4">Ajouter un utilisateur</h3>
+        <form (ngSubmit)="addUser()" #addUserForm="ngForm" class="flex flex-col gap-3">
+          <input [(ngModel)]="newUser.nom" name="nom" placeholder="Nom" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+          <input [(ngModel)]="newUser.prenom" name="prenom" placeholder="Prénom" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+          <input [(ngModel)]="newUser.email" name="email" type="email" placeholder="Email" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+          <input [(ngModel)]="newUser.telephone" name="telephone" placeholder="Téléphone" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+          <input [(ngModel)]="newUser.matricule" name="matricule" placeholder="Matricule" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+          <input [(ngModel)]="newUser.password" name="password" type="password" placeholder="Mot de passe" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+          <select [(ngModel)]="newUser.unite_administrative" name="unite_administrative" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+            <option value="" disabled selected>Unité administrative</option>
+            <option *ngFor="let u of uniteOptions" [value]="u.nom">{{ u.nom }}</option>
+          </select>
+          <select [(ngModel)]="newUser.role" name="role" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+            <option value="RESPONSABLE">Responsable</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+          <button type="submit" class="bg-violet-700 hover:bg-violet-800 text-white font-semibold px-6 py-2 rounded-lg transition">Ajouter</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Un pipe userFilter sera à créer pour filtrer les utilisateurs par rôle/statut --> 

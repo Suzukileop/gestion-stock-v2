@@ -1,0 +1,286 @@
+<app-header></app-header>
+<div class="flex gap-6 pt-24 px-2 min-h-screen mx-auto" style="max-width: 100rem;">
+  <!-- Sidebar sticky -->
+  <aside class="h-[calc(100vh-6rem)] sticky top-24 w-72">
+    <sidebar-client></sidebar-client>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 h-[calc(100vh-6rem)] overflow-y-auto bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 rounded-2xl shadow-xl p-8">
+    <div class="max-w-6xl mx-auto">
+      <!-- En-tête avec stats -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl p-6 shadow-lg border border-violet-100 dark:border-violet-900/40">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Commandes en cours</p>
+              <h3 class="text-2xl font-bold text-violet-700 dark:text-violet-300">{{ commandesEnCours }}</h3>
+            </div>
+            <div class="p-3 bg-violet-100 dark:bg-violet-900/40 rounded-xl">
+              <svg class="w-6 h-6 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl p-6 shadow-lg border border-blue-100 dark:border-blue-900/40">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Expressions de besoin</p>
+              <h3 class="text-2xl font-bold text-blue-700 dark:text-blue-300">{{ expressionsBesoin }}</h3>
+            </div>
+            <div class="p-3 bg-blue-100 dark:bg-blue-900/40 rounded-xl">
+              <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl p-6 shadow-lg border border-pink-100 dark:border-pink-900/40">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Commandes livrées</p>
+              <h3 class="text-2xl font-bold text-pink-700 dark:text-pink-300">{{ commandesLivrees }}</h3>
+            </div>
+            <div class="p-3 bg-pink-100 dark:bg-pink-900/40 rounded-xl">
+              <svg class="w-6 h-6 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expressions de besoin récentes -->
+      <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-lg p-6 border border-blue-100 dark:border-blue-900/40">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold text-blue-700 dark:text-blue-300">Expressions de besoin récentes</h2>
+          <button (click)="nouvelleExpressionBesoin()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-400 text-white rounded-xl shadow hover:from-pink-500 hover:to-blue-600 transition font-semibold flex items-center gap-2">
+            <span class="text-lg">+</span> Nouvelle expression
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-gradient-to-r from-blue-100 to-violet-100 dark:from-blue-900 dark:to-violet-900">
+              <tr>
+                <th class="px-4 py-3 text-left font-bold text-blue-700 dark:text-blue-200">Période</th>
+                <th class="px-4 py-3 text-left font-bold text-blue-700 dark:text-blue-200">Date saisie</th>
+                <th class="px-4 py-3 text-left font-bold text-blue-700 dark:text-blue-200">Statut</th>
+                <th class="px-4 py-3 text-left font-bold text-blue-700 dark:text-blue-200">Articles</th>
+                <th class="px-4 py-3 text-left font-bold text-blue-700 dark:text-blue-200">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let exp of dernieresExpressions" class="border-b border-gray-200 dark:border-gray-700">
+                <td class="px-4 py-3 text-gray-700 dark:text-gray-200">
+                  {{ exp.date_debut | date:'shortDate' }} - {{ exp.date_fin | date:'shortDate' }}
+                </td>
+                <td class="px-4 py-3 text-gray-700 dark:text-gray-200">{{ exp.date_saisie | date:'shortDate' }}</td>
+                <td class="px-4 py-3">
+                  <span class="px-3 py-1 rounded-full text-xs font-semibold"
+                    [ngClass]="{
+                      'bg-yellow-100 text-yellow-700': exp.statut === 'BROUILLON',
+                      'bg-green-100 text-green-700': exp.statut === 'VALIDEE',
+                      'bg-blue-100 text-blue-700': exp.statut === 'ENVOYEE'
+                    }">
+                    {{ exp.statut }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-gray-700 dark:text-gray-200">{{ exp.nombreArticles }} articles</td>
+                <td class="px-4 py-3">
+                  <button (click)="voirDetailExpression(exp)" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
+                    Voir détails
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal Nouvelle Commande -->
+<div *ngIf="showCommandeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white/80 dark:bg-gray-900/80 rounded-2xl shadow-2xl max-w-2xl w-full relative animate-fade-in backdrop-blur-md border border-violet-200 dark:border-violet-800">
+    <!-- Header violet-only -->
+    <div class="rounded-t-2xl px-8 py-4 bg-gradient-to-r from-violet-700 to-violet-500 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M3 12h18M3 17h18"/></svg>
+        <h2 class="text-lg font-bold text-white">Nouvelle Commande</h2>
+      </div>
+      <button (click)="closeCommandeModal()" class="text-white hover:text-violet-200 transition text-2xl font-bold"><span aria-label="Fermer">&times;</span></button>
+    </div>
+    <!-- Étape 1 : Ajout d'articles -->
+    <form *ngIf="stepCommande === 1" class="px-8 py-6 space-y-4" autocomplete="off" (ngSubmit)="$event.preventDefault()">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Catégorie d'Article <span class="text-red-500">*</span></label>
+          <select [(ngModel)]="commandeForm.categorie" name="categorie" class="w-full rounded-lg border border-gray-300 focus:ring-violet-500 focus:border-violet-500" required>
+            <option value="">Choisir catégorie...</option>
+            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+          </select>
+          <div *ngIf="commandeErrors.categorie" class="text-xs text-red-500 mt-1">Catégorie requise.</div>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium mb-1">Article <span class="text-red-500">*</span></label>
+          <input type="text" [(ngModel)]="commandeForm.article" name="article" class="w-full rounded-lg border border-gray-300 focus:ring-violet-500 focus:border-violet-500" placeholder="Saisir article" required />
+          <div *ngIf="commandeErrors.article" class="text-xs text-red-500 mt-1">Article requis.</div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Unité <span class="text-red-500">*</span></label>
+          <input type="text" [(ngModel)]="commandeForm.unite" name="unite" class="w-full rounded-lg border border-gray-300 focus:ring-violet-500 focus:border-violet-500" required />
+          <div *ngIf="commandeErrors.unite" class="text-xs text-red-500 mt-1">Unité requise.</div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Quantité <span class="text-red-500">*</span></label>
+          <input type="number" min="1" [(ngModel)]="commandeForm.quantite" name="quantite" class="w-full rounded-lg border border-gray-300 focus:ring-violet-500 focus:border-violet-500" placeholder="Saisir quantité" required />
+          <div *ngIf="commandeErrors.quantite" class="text-xs text-red-500 mt-1">Quantité requise.</div>
+        </div>
+      </div>
+      <div class="flex flex-col md:flex-row justify-between items-center gap-2 mt-4">
+        <div class="text-sm text-gray-500 dark:text-gray-300">Articles ajoutés : <span class="font-bold text-violet-600 dark:text-violet-300">{{ articlesCommande.length }}</span></div>
+        <div class="flex gap-2 mt-2 md:mt-0">
+          <button type="button" (click)="closeCommandeModal()" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold shadow">Annuler</button>
+          <button type="button" (click)="ajouterArticle()" class="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-semibold shadow">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Ajouter article
+          </button>
+          <button type="button" (click)="passerEtape2()" [disabled]="articlesCommande.length === 0" class="px-4 py-2 rounded-lg bg-violet-700 hover:bg-violet-800 text-white font-semibold shadow">Suivant</button>
+        </div>
+      </div>
+      <div *ngIf="message" class="mt-2 text-center text-sm font-semibold" [ngClass]="{'text-green-600': messageType==='success', 'text-red-600': messageType==='error'}">{{ message }}</div>
+    </form>
+    <div *ngIf="stepCommande === 1" class="px-8 pb-6">
+      <table class="min-w-full text-sm mt-6">
+        <thead class="bg-violet-700 text-white">
+          <tr>
+            <th class="px-4 py-2 text-left font-bold">Article</th>
+            <th class="px-4 py-2 text-left font-bold">Unité</th>
+            <th class="px-4 py-2 text-left font-bold">Quantité commandée</th>
+            <th class="px-4 py-2 text-left font-bold">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let art of articlesCommande; let i = index" [ngClass]="{'bg-violet-50 dark:bg-violet-900/30': i%2===0, 'bg-white dark:bg-gray-800': i%2!==0}">
+            <td class="px-4 py-2">{{ art.article }}</td>
+            <td class="px-4 py-2">{{ art.unite }}</td>
+            <td class="px-4 py-2">{{ art.quantite }}</td>
+            <td class="px-4 py-2">
+              <button (click)="supprimerArticle(i)" class="text-red-600 hover:text-red-800 font-bold" title="Supprimer">&times;</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Étape 2 : Saisie du compte et motif -->
+    <form *ngIf="stepCommande === 2" class="px-8 py-6 space-y-4" autocomplete="off" (ngSubmit)="$event.preventDefault()">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Compte <span class="text-red-500">*</span></label>
+          <select [(ngModel)]="commandeMeta.compte" name="compte" class="w-full rounded-lg border border-gray-300 focus:ring-violet-500 focus:border-violet-500" required>
+            <option value="">Choisir compte...</option>
+            <option *ngFor="let c of comptes" [value]="c">{{ c }}</option>
+          </select>
+          <div *ngIf="metaErrors.compte" class="text-xs text-red-500 mt-1">Compte requis.</div>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium mb-1">Motif <span class="text-red-500">*</span></label>
+          <textarea [(ngModel)]="commandeMeta.motif" name="motif" class="w-full rounded-lg border border-gray-300 focus:ring-violet-500 focus:border-violet-500" rows="2" placeholder="Saisir motif" required></textarea>
+          <div *ngIf="metaErrors.motif" class="text-xs text-red-500 mt-1">Motif requis.</div>
+        </div>
+      </div>
+      <div class="flex flex-col md:flex-row justify-between items-center gap-2 mt-4">
+        <div class="text-sm text-gray-500 dark:text-gray-300">Articles à commander : <span class="font-bold text-violet-600 dark:text-violet-300">{{ articlesCommande.length }}</span></div>
+        <div class="flex gap-2 mt-2 md:mt-0">
+          <button type="button" (click)="stepCommande = 1" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold shadow">Retour</button>
+          <button type="button" (click)="validerCommande()" class="px-4 py-2 rounded-lg bg-violet-700 hover:bg-violet-800 text-white font-semibold shadow">Valider la commande</button>
+        </div>
+      </div>
+      <div *ngIf="message" class="mt-2 text-center text-sm font-semibold" [ngClass]="{'text-green-600': messageType==='success', 'text-red-600': messageType==='error'}">{{ message }}</div>
+      <div class="mt-6">
+        <table class="min-w-full text-sm">
+          <thead class="bg-violet-700 text-white">
+            <tr>
+              <th class="px-4 py-2 text-left font-bold">Article</th>
+              <th class="px-4 py-2 text-left font-bold">Unité</th>
+              <th class="px-4 py-2 text-left font-bold">Quantité commandée</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let art of articlesCommande; let i = index" [ngClass]="{'bg-violet-50 dark:bg-violet-900/30': i%2===0, 'bg-white dark:bg-gray-800': i%2!==0}">
+              <td class="px-4 py-2">{{ art.article }}</td>
+              <td class="px-4 py-2">{{ art.unite }}</td>
+              <td class="px-4 py-2">{{ art.quantite }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Détail Commande (style avancé violet/bleu/pink) -->
+<div *ngIf="selectedCommande" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white/90 dark:bg-gray-900/90 rounded-3xl shadow-2xl max-w-xl w-full relative animate-fade-in border border-violet-200 dark:border-violet-800">
+    <div class="rounded-t-3xl px-8 py-5 bg-gradient-to-r from-violet-600 to-blue-400 flex items-center justify-between shadow-lg">
+      <h2 class="text-lg font-extrabold text-white tracking-wide">Détail de la commande N° <span class="font-mono">{{ selectedCommande.numero }}</span></h2>
+      <button (click)="closeDetailModal()" class="text-white hover:text-pink-200 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="px-8 py-6">
+      <div class="mb-2">
+        <span class="font-semibold text-violet-700 dark:text-violet-200">Date :</span> <span>{{ selectedCommande.date | date:'short' }}</span>
+      </div>
+      <div class="mb-2">
+        <span class="font-semibold text-violet-700 dark:text-violet-200">Statut :</span>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold"
+          [ngClass]="{
+            'bg-yellow-100 text-yellow-700': selectedCommande.statut === 'ENVOYEE',
+            'bg-green-100 text-green-700': selectedCommande.statut === 'VALIDEE',
+            'bg-red-100 text-red-700': selectedCommande.statut === 'REJETEE',
+            'bg-blue-100 text-blue-700': selectedCommande.statut === 'LIVREE'
+          }">
+          {{ selectedCommande.statut }}
+        </span>
+      </div>
+      <div class="mb-2">
+        <span class="font-semibold text-violet-700 dark:text-violet-200">Motif :</span> <span>{{ selectedCommande.motif }}</span>
+      </div>
+      <div class="mb-2">
+        <span class="font-semibold text-violet-700 dark:text-violet-200">Compte :</span> <span>{{ selectedCommande.compte }}</span>
+      </div>
+      <div class="mt-4">
+        <span class="font-semibold text-violet-700 dark:text-violet-200">Articles :</span>
+        <div *ngIf="selectedCommande.articles && selectedCommande.articles.length > 0; else noArticlesModal">
+          <div class="overflow-x-auto mt-2">
+            <table class="min-w-full text-xs border rounded-lg">
+              <thead class="bg-violet-50 dark:bg-violet-900/30">
+                <tr>
+                  <th class="px-3 py-2 text-left font-bold text-violet-700 dark:text-violet-200">Catégorie</th>
+                  <th class="px-3 py-2 text-left font-bold text-violet-700 dark:text-violet-200">Unité</th>
+                  <th class="px-3 py-2 text-left font-bold text-violet-700 dark:text-violet-200">Quantité</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let art of selectedCommande.articles">
+                  <td class="px-3 py-2 text-gray-700 dark:text-gray-200">{{ art.categorie || selectedCommande.categorie || '—' }}</td>
+                  <td class="px-3 py-2 text-gray-700 dark:text-gray-200">{{ art.unite }}</td>
+                  <td class="px-3 py-2 text-gray-700 dark:text-gray-200">{{ art.quantite }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <ng-template #noArticlesModal>
+          <div class="text-gray-400 dark:text-gray-500">Aucun article pour cette commande.</div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div> 

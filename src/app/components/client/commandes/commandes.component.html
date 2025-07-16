@@ -1,0 +1,545 @@
+<app-header></app-header>
+<div class="flex gap-4 pt-20 px-4 mx-auto" style="max-width: 100rem;">
+  <!-- Sidebar sticky, pleine hauteur -->
+  <aside class="sticky top-20 w-64 h-[calc(100vh-5rem)]">
+    <sidebar-client></sidebar-client>
+  </aside>
+  <!-- Main content (scrollable) -->
+  <main class="flex-1 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-xl ">
+    <div class="max-w-6xl mx-auto">
+      <!-- Partie haute : filtres/recherche (30%) -->
+      <div class="flex flex-col bg-white dark:bg-gray-900 px-4 my-2 border border-gray-200 dark:border-gray-700 rounded-lg pt-4 pb-2" style="height:30vh; max-height:30vh; overflow-y:auto;">
+        <div class="flex flex-col gap-2 mb-2">
+        <!-- Titre seul en haut -->
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2 font-sans">Mes commandes</h1>
+        <!-- Barre de recherche + bouton ajout -->
+          <div class="flex flex-row items-center gap-2 w-full">
+            <div class="flex-1 flex flex-row items-stretch gap-2">
+              <div class="relative w-full max-w-md flex items-stretch gap-2">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+                <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onFilterChange()" placeholder="Rechercher..." class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 transition w-full h-full" />
+                <div class="flex items-stretch">
+                  <button (click)="resetFilters()" class="flex items-center gap-1 px-5 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg text-sm font-medium shadow hover:bg-gray-300 dark:hover:bg-gray-700 transition h-full">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    Réinitialiser
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button (click)="nouvelleCommande()" class="inline-flex items-center gap-2 px-5 py-2 bg-fuchsia-700 text-white rounded-lg shadow hover:bg-fuchsia-800 transition font-semibold">
+            <span class="text-lg">+</span> <span>Nouvelle commande</span>
+          </button>
+        </div>
+          <!-- Ligne de filtres alignée sur la largeur de la barre de recherche -->
+          <div class="w-full max-w-md flex flex-row flex-wrap items-center gap-2 mt-2">
+            <!-- Bascule mode d'affichage (table/grille) -->
+            <button (click)="toggleViewMode()" class="p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Basculer l'affichage">
+              <svg *ngIf="viewMode === 'cards'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/></svg>
+              <svg *ngIf="viewMode === 'table'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            </button>
+            <div class="relative min-w-[180px] flex-1">
+              <button type="button" (click)="showDateRange = !showDateRange" class="date-range-toggle flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-white focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 transition w-full">
+                <!-- Icône calendrier -->
+                <svg class="w-5 h-5 text-fuchsia-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <span *ngIf="filterDateStart && filterDateEnd">Du {{ filterDateStart | date:'shortDate' }} au {{ filterDateEnd | date:'shortDate' }}</span>
+                <span *ngIf="filterDateStart && !filterDateEnd">Depuis le {{ filterDateStart | date:'shortDate' }}</span>
+                <span *ngIf="!filterDateStart && filterDateEnd">Jusqu'au {{ filterDateEnd | date:'shortDate' }}</span>
+                <span *ngIf="!filterDateStart && !filterDateEnd" class="text-gray-400">Plage de dates</span>
+                <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div *ngIf="showDateRange" #dateRangeDropdown class="absolute left-0 right-0 mx-auto z-[10050] mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-4 min-w-full max-w-md overflow-x-auto animate-fade-in">
+                <div class="flex flex-col gap-2">
+                  <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Du</label>
+                    <input type="date" [(ngModel)]="filterDateStart" (change)="onDateStartChange()" class="rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 transition w-full" />
+                    <label class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-2 mb-1">Au</label>
+                    <input type="date" [(ngModel)]="filterDateEnd" (change)="onDateEndChange()" class="rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 transition w-full" />
+                  </div>
+                  <div class="flex flex-wrap gap-2 mt-2">
+                    <button type="button" (click)="setQuickRange('today')" class="px-2 py-1 rounded bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-200 text-xs">Aujourd'hui</button>
+                    <button type="button" (click)="setQuickRange('week')" class="px-2 py-1 rounded bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-200 text-xs">Cette semaine</button>
+                    <button type="button" (click)="setQuickRange('month')" class="px-2 py-1 rounded bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-200 text-xs">Ce mois-ci</button>
+                    <button type="button" (click)="setQuickRange('30days')" class="px-2 py-1 rounded bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-200 text-xs">30 derniers jours</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <select [(ngModel)]="filterStatut" (ngModelChange)="onFilterChange()" class="rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 transition w-32">
+                <option value="">Tous </option>
+                <option value="BROUILLON">Brouillon</option>
+                <option value="ENVOYEE">Envoyée</option>
+                <option value="VALIDEE">Validée</option>
+                <option value="REJETEE">Rejetée</option>
+                <option value="LIVREE">Livrée</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      
+      <!-- Liste des commandes -->
+      <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-lg p-6 mb-8 border border-fuchsia-100 dark:border-fuchsia-900/40 backdrop-blur-sm"
+           style="height:70vh; max-height:70vh; overflow-y:auto;">
+        <div *ngIf="viewMode == 'table'">
+        <div class="overflow-x-auto max-h-[60vh] overflow-y-auto rounded-2xl shadow border border-fuchsia-100 dark:border-fuchsia-900/40 bg-white dark:bg-gray-800">
+            <table class="min-w-full text-sm align-baseline">
+              <thead class="sticky top-0 z-30 bg-gray-100 dark:bg-gray-700 text-xs text-left text-gray-700 uppercase dark:text-gray-400 font-sans">
+                <tr>
+                  <th class="px-4 py-3 font-sans font-bold">N° Commande</th>
+                  <th class="px-4 py-3 font-sans font-bold">Date</th>
+                  <th class="px-4 py-3 font-sans font-bold">Statut</th>
+                  <th class="px-4 py-3 font-sans font-bold">Compte</th>
+                  <th class="px-4 py-3 font-sans font-bold">Articles</th>
+                  <th class="px-4 py-3 font-sans font-bold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+                <ng-container *ngFor="let cmd of filteredCommandes">
+                  <tr class="border-b dark:border-gray-700 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-900/30 transition-colors duration-200 cursor-pointer">
+                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ cmd.numero }}</td>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ cmd.date | date:'shortDate' }}</td>
+                  <td class="px-4 py-3">
+                      <span class="px-3 py-1 rounded-full text-xs font-semibold shadow"
+                      [ngClass]="{
+                          'bg-gray-100 text-gray-500 border border-gray-300': cmd.statut === 'BROUILLON',
+                          'bg-yellow-100 text-yellow-700 border border-yellow-300': cmd.statut === 'ENVOYEE',
+                          'bg-green-100 text-green-700 border border-green-300': cmd.statut === 'VALIDEE',
+                          'bg-red-100 text-red-700 border border-red-300': cmd.statut === 'REJETEE',
+                          'bg-blue-100 text-blue-700 border border-blue-300': cmd.statut === 'LIVREE'
+                      }">
+                      {{ cmd.statut }}
+                    </span>
+                  </td>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ cmd.compte || '—' }}</td>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ cmd.nombreArticles }} articles</td>
+                  <td class="px-4 py-3">
+                      <div class="flex items-center gap-2 relative">
+                        <button *ngIf="cmd.statut === 'BROUILLON'" (click)="soumettreCommande(cmd); $event.stopPropagation()" class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition text-blue-600" title="Soumettre la commande">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M2 12l19-7-7 19-2-8-8-2z"/>
+                          </svg>
+                        </button>
+                        <button (click)="toggleDetailCommande(cmd)" class="p-2 rounded-full hover:bg-fuchsia-100 dark:hover:bg-fuchsia-800 focus:outline-none focus:ring-2 focus:ring-fuchsia-400 transition text-fuchsia-500" [attr.aria-label]="cmd.showDetail ? 'Fermer le détail' : 'Voir le détail'">
+                          <svg *ngIf="!cmd.showDetail" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5c-7 0-9 7.5-9 7.5s2 7.5 9 7.5 9-7.5 9-7.5-2-7.5-9-7.5zm0 10a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg>
+                          <svg *ngIf="cmd.showDetail" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                        <button *ngIf="cmd.statut === 'BROUILLON'" (click)="onEditCommande(cmd)" class="p-2 rounded-full hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900/40 transition text-fuchsia-600" title="Modifier">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 20h9"/>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                          </svg>
+                        </button>
+                        <button *ngIf="cmd.statut === 'BROUILLON'" (click)="onDeleteCommande(cmd)" class="p-2 rounded-full hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900/40 transition text-red-500 dark:text-red-400" title="Supprimer">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M3 6h18"/>
+                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            <rect x="5" y="6" width="14" height="14" rx="2"/>
+                            <path d="M10 11v6M14 11v6"/>
+                          </svg>
+                    </button>
+                      </div>
+                  </td>
+                </tr>
+                <tr *ngIf="cmd.showDetail">
+                    <td colspan="6" class="p-0 border-none">
+                      <div class="transition-all duration-300 overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 mx-4 my-2 shadow">
+                        <div class="mb-4">
+                          <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Motif</span>
+                          <div class="rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-gray-700 dark:text-gray-200 min-h-[40px] w-full">
+                            {{ cmd.motif || '—' }}
+                          </div>
+                        </div>
+                        <div class="mb-4">
+                          <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Motif de retour (en cas de rejet)</span>
+                          <div class="rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-4 min-h-[40px]"
+                               [ngClass]="cmd.motifRetour ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'">
+                            {{ cmd.motifRetour || 'Aucun motif de retour' }}
+                          </div>
+                        </div>
+                        <div class="mb-4">
+                          <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Catégorie de pièce</span>
+                          <div class="rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-gray-700 dark:text-gray-200 min-h-[40px] w-full">
+                            {{ cmd.categorie || '—' }}
+                          </div>
+                      </div>
+                      <div *ngIf="cmd.articles && cmd.articles.length > 0">
+                          <span class="font-semibold text-fuchsia-700 dark:text-fuchsia-200">Articles :</span>
+                          <div class="mt-8 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <table *ngIf="cmd.articles.length > 0" class="min-w-full text-sm align-baseline bg-white dark:bg-gray-900 rounded-2xl">
+                              <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-xs text-left text-gray-700 uppercase dark:text-gray-400 font-sans">
+                              <tr>
+                                  <th class="px-4 py-3 font-sans font-bold rounded-tl-2xl">Désignation</th>
+                                  <th class="px-4 py-3 font-sans font-bold">Unité</th>
+                                  <th class="px-4 py-3 font-sans font-bold">Quantité</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let art of cmd.articles" class="border-b dark:border-gray-700 even:bg-gray-50 dark:even:bg-gray-900/20 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-900/30 transition-colors duration-200">
+                                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.article }}</td>
+                                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.unite }}</td>
+                                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.quantite }}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div *ngIf="!cmd.articles || cmd.articles.length === 0" class="text-gray-400 dark:text-gray-500">Aucun article pour cette commande.</div>
+                    </div>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
+          <!-- Pagination moderne -->
+          <div class="flex flex-wrap items-center justify-between gap-4 px-2 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#232c3a] shadow-lg dark:shadow-none text-gray-900 dark:text-gray-300 text-sm mt-0">
+            <div class="flex items-center gap-2">
+              <span>Rows per page</span>
+              <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-100 focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                <option *ngFor="let size of [10, 20]" [value]="size">{{size}}</option>
+              </select>
+              <span class="ml-2">{{(currentPage-1)*pageSize+1}}-{{min(currentPage*pageSize, totalItems)}} of {{totalItems}}</span>
+            </div>
+            <div class="flex items-center gap-2 ml-auto">
+              <button (click)="goToPreviousPage()" [disabled]="currentPage === 1" class="px-4 py-1 rounded border border-gray-700 bg-gray-800 text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+              <button (click)="goToNextPage()" [disabled]="currentPage === totalPages" class="px-4 py-1 rounded border border-gray-700 bg-gray-800 text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+            </div>
+          </div>
+        </div>
+        </div>
+        <div *ngIf="viewMode == 'cards'">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div *ngFor="let cmd of filteredCommandes" class="group bg-white/80 dark:bg-gray-800/80 rounded-xl shadow-md p-6 flex flex-col min-h-[180px] border border-fuchsia-100 dark:border-fuchsia-900/40 relative cursor-pointer transition-all duration-200 backdrop-blur-sm hover:shadow-lg hover:bg-white/90 dark:hover:bg-gray-800/90 hover:border-fuchsia-400"
+              (click)="openDetailModal(cmd)">
+              <!-- Actions flottantes -->
+              <div class="absolute top-4 right-4 flex items-center gap-2 z-20" (click)="$event.stopPropagation()">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold shadow"
+                  [ngClass]="{
+                    'bg-gray-100 text-gray-500 border border-gray-300': cmd.statut === 'BROUILLON',
+                    'bg-yellow-100 text-yellow-700 border border-yellow-300': cmd.statut === 'ENVOYEE',
+                    'bg-green-100 text-green-700 border border-green-300': cmd.statut === 'VALIDEE',
+                    'bg-red-100 text-red-700 border border-red-300': cmd.statut === 'REJETEE',
+                    'bg-blue-100 text-blue-700 border border-blue-300': cmd.statut === 'LIVREE'
+                  }">
+                  {{ cmd.statut }}
+                </span>
+                <button *ngIf="cmd.statut === 'BROUILLON'" (click)="onEditCommande(cmd)" class="p-2 rounded-full hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900/40 transition text-fuchsia-600" title="Modifier">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 20h9"/>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                  </svg>
+                </button>
+                <button *ngIf="cmd.statut === 'BROUILLON'" (click)="onDeleteCommande(cmd)" class="p-2 rounded-full hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900/40 transition text-red-500 dark:text-red-400" title="Supprimer">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M3 6h18"/>
+                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    <rect x="5" y="6" width="14" height="14" rx="2"/>
+                    <path d="M10 11v6M14 11v6"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="font-bold text-lg text-fuchsia-700 dark:text-fuchsia-300 truncate max-w-[14rem] mb-1 relative">
+                <span class="relative z-10">{{ cmd.numero }}</span>
+              </div>
+              <div class="text-xs text-gray-400 dark:text-gray-500 mb-1">{{ cmd.nombreArticles }} article{{ cmd.nombreArticles > 1 ? 's' : '' }}</div>
+              <div class="text-sm text-gray-700 dark:text-gray-200 truncate mb-1 flex items-center justify-between">Date : <span class="font-semibold text-gray-700 dark:text-gray-200 ml-auto text-right">{{ cmd.date | date:'shortDate' }}</span></div>
+              <div class="text-sm text-gray-700 dark:text-gray-200 truncate mb-1 flex items-center justify-between">Compte : <span class="font-semibold ml-auto text-right">{{ cmd.compte }}</span></div>
+              <div class="flex-1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal Nouvelle Commande -->
+<div *ngIf="showCommandeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="w-full max-w-3xl mx-auto my-8 flex flex-col bg-white dark:bg-gray-900/90 dark:backdrop-blur-md border border-gray-200 dark:border-gray-600 rounded-2xl shadow-2xl relative animate-fade-in max-h-[90vh]">
+    <div class="sticky top-0 z-10 bg-white dark:bg-gray-900 rounded-t-2xl shadow-sm px-6 pt-6 pb-4 flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center w-full">Nouvelle commande</h2>
+      <button (click)="closeCommandeModal()" class="absolute top-6 right-6 text-gray-400 hover:text-fuchsia-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="overflow-y-auto px-6 pb-6 pt-2" style="max-height:70vh;">
+      <form class="space-y-5" autocomplete="off" (ngSubmit)="$event.preventDefault()">
+        <div class="flex flex-col gap-2 md:gap-4">
+          <div class="flex flex-row justify-center gap-6 mb-2">
+            <label *ngFor="let c of comptes" class="inline-flex items-center cursor-pointer">
+              <input type="radio" [(ngModel)]="commandeMeta.compte" name="compte" [value]="c" class="form-radio text-fuchsia-600 focus:ring-fuchsia-500" required />
+              <span class="ml-2 text-gray-900 dark:text-gray-200">{{ c }}</span>
+            </label>
+          </div>
+          <div *ngIf="metaErrors.compte" class="text-xs text-red-500 text-center mb-2">Compte requis.</div>
+        <div>
+            <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Motif</label>
+            <textarea [(ngModel)]="commandeMeta.motif" name="motif" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-gray-400 focus:border-gray-300 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-700" rows="2" required [ngClass]="{'border-red-500': metaErrors.motif}" placeholder="Saisir motif"></textarea>
+            <div *ngIf="metaErrors.motif" class="text-xs text-red-500 mt-1">Motif requis.</div>
+          </div>
+        </div>
+        <div class="mt-6 mb-8 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+          <div class="flex gap-2">
+            <div class="w-1/2">
+              <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Catégorie d'Article</label>
+              <select [(ngModel)]="commandeForm.categorie" name="categorie" (ngModelChange)="onCategorieChange()" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-fuchsia-500 focus:border-fuchsia-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-fuchsia-500 dark:focus:border-fuchsia-500" required [ngClass]="{'border-red-500': commandeErrors.categorie}" [disabled]="articlesCommande.length > 0">
+            <option value="">Choisir catégorie...</option>
+            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+          </select>
+          <div *ngIf="commandeErrors.categorie" class="text-xs text-red-500 mt-1">Catégorie requise.</div>
+        </div>
+            <div class="w-1/2">
+              <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Article</label>
+              <select [(ngModel)]="selectedArticle" name="article" (ngModelChange)="onArticleChange()" [disabled]="!commandeForm.categorie" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-fuchsia-500 focus:border-fuchsia-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-fuchsia-500 dark:focus:border-fuchsia-500 transition-all duration-300" [ngClass]="{'ring-2 ring-fuchsia-400 animate-fade-in': editAnimation, 'border-red-500': commandeErrors.article}" required>
+                <option value="">Sélectionner un article...</option>
+                <option *ngFor="let art of articleOptions" [value]="art">{{ art }}</option>
+              </select>
+          <div *ngIf="commandeErrors.article" class="text-xs text-red-500 mt-1">Article requis.</div>
+        </div>
+          </div>
+          <div class="flex gap-2 mt-2">
+            <div class="w-1/2">
+              <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Unité</label>
+              <input type="text" [(ngModel)]="selectedUnite" name="unite" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-fuchsia-500 focus:border-fuchsia-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-fuchsia-500 dark:focus:border-fuchsia-500 transition-all duration-300" [ngClass]="{'ring-2 ring-fuchsia-400 animate-fade-in': editAnimation, 'border-red-500': commandeErrors.unite}" required readonly />
+          <div *ngIf="commandeErrors.unite" class="text-xs text-red-500 mt-1">Unité requise.</div>
+        </div>
+            <div class="w-1/2">
+              <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Quantité</label>
+              <input type="number" min="1" [(ngModel)]="commandeForm.quantite" name="quantite" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-fuchsia-500 focus:border-fuchsia-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-fuchsia-500 dark:focus:border-fuchsia-500 transition-all duration-300" [ngClass]="{'ring-2 ring-fuchsia-400 animate-fade-in': editAnimation, 'border-red-500': commandeErrors.quantite}" required placeholder="Saisir quantité" />
+          <div *ngIf="commandeErrors.quantite" class="text-xs text-red-500 mt-1">Quantité requise.</div>
+        </div>
+      </div>
+          <div class="flex justify-end mt-4">
+            <button type="button"
+                    *ngIf="editIndex === null || editIndex === undefined"
+                    (click)="ajouterArticle()"
+                    class="inline-flex items-center gap-2 px-5 py-2 bg-fuchsia-200 text-fuchsia-700 rounded-lg shadow hover:bg-fuchsia-300 transition font-semibold">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-cart" viewBox="0 0 24 24">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61l1.38-7.39H6"/>
+              </svg>
+              Ajouter au panier
+            </button>
+            <button type="button"
+                    *ngIf="editIndex !== null && editIndex !== undefined"
+                    (click)="updateArticle()"
+                    class="inline-flex items-center gap-2 px-5 py-2 bg-fuchsia-600 text-white rounded-lg shadow hover:bg-fuchsia-700 transition font-semibold">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-edit w-5 h-5 text-fuchsia-600 dark:text-fuchsia-300" viewBox="0 0 24 24">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
+              Mettre à jour
+          </button>
+    </div>
+        </div>
+        <div class="flex justify-end mt-6 gap-4">
+          <button type="button" (click)="closeCommandeModal()" class="w-1/3 text-red-600 bg-red-50 hover:bg-red-100 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center shadow dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60 transition">Annuler</button>
+          <button type="reset" class="w-1/3 text-gray-700 bg-gray-100 hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-fuchsia-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center border border-gray-300 dark:border-gray-700 dark:hover:border-gray-600 shadow dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition">Réinitialiser</button>
+          <button type="submit" (click)="validerCommande()" class="w-2/3 text-white bg-fuchsia-700 hover:bg-fuchsia-800 focus:ring-4 focus:outline-none focus:ring-fuchsia-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center shadow transition-colors duration-200">{{ isEditMode ? 'Mettre à jour la commande' : 'Valider la commande' }}</button>
+        </div>
+      </form>
+      <!-- Panier d'articles (affiché sous le formulaire d'ajout) -->
+      <div class="mt-8 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm" *ngIf="articlesCommande.length > 0">
+        <table class="min-w-full text-sm align-baseline bg-white dark:bg-gray-900 rounded-2xl">
+          <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-xs text-left text-gray-700 uppercase dark:text-gray-400 font-sans">
+            <tr>
+              <th class="px-4 py-3 font-sans font-bold rounded-tl-2xl">Désignation</th>
+              <th class="px-4 py-3 font-sans font-bold">Unité</th>
+              <th class="px-4 py-3 font-sans font-bold">Quantité</th>
+              <th class="px-4 py-3 font-sans font-bold rounded-tr-2xl text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let art of articlesCommande; let i = index" class="border-b dark:border-gray-700 even:bg-gray-50 dark:even:bg-gray-900/20 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-900/30 transition-colors duration-200">
+              <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.article }}</td>
+              <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.unite }}</td>
+              <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.quantite }}</td>
+              <td class="px-4 py-3 flex gap-2 items-center justify-end whitespace-nowrap">
+                <button type="button" (click)="editArticle(i)" class="p-1 rounded hover:bg-fuchsia-100 dark:hover:bg-fuchsia-800 transition" title="Modifier">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-edit w-5 h-5 text-fuchsia-600 dark:text-fuchsia-300" viewBox="0 0 24 24">
+                    <path d="M12 20h9"/>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                  </svg>
+                </button>
+                <button type="button" (click)="supprimerArticle(i)" class="p-1 rounded hover:bg-fuchsia-100 dark:hover:bg-fuchsia-800 transition" title="Supprimer">
+                  <svg class="w-5 h-5 text-fuchsia-500 dark:text-fuchsia-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Détail Commande (style avancé violet/bleu/pink) -->
+<div *ngIf="selectedCommande" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+  <div class="w-full max-w-3xl mx-auto my-8 flex flex-col bg-white dark:bg-gray-900/70 dark:backdrop-blur-md border border-gray-200 dark:border-gray-600 rounded-2xl shadow-2xl relative animate-fade-in max-h-[90vh]">
+    <div class="sticky top-0 z-20 flex items-center justify-between px-6 pt-6 pb-4 bg-white dark:bg-gray-900 rounded-t-2xl shadow-sm">
+      <h2 class="text-2xl font-bold text-fuchsia-700 dark:text-fuchsia-300 text-center flex-1">Détail de la commande</h2>
+      <button (click)="closeDetailModal()" class="ml-4 p-2 rounded-full bg-white/80 dark:bg-gray-800/80 shadow hover:bg-fuchsia-100 dark:hover:bg-fuchsia-800 transition text-gray-400 hover:text-fuchsia-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="overflow-y-auto px-6 pb-6 pt-2" style="max-height:70vh;">
+      <div class="flex flex-col md:flex-row md:gap-6 mb-4">
+        <div class="flex-1 space-y-2">
+          <div class="flex flex-col md:flex-row md:items-center md:gap-6">
+            <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">N° Commande</span><span class="font-mono text-gray-900 dark:text-white">{{ selectedCommande.numero }}</span></div>
+            <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Date</span><span class="text-gray-900 dark:text-white">{{ selectedCommande.date | date:'shortDate' }}</span></div>
+            <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Statut</span>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold"
+          [ngClass]="{
+                  'bg-gray-100 text-gray-500 border border-gray-300': selectedCommande.statut === 'BROUILLON',
+                  'bg-yellow-100 text-yellow-700 border border-yellow-300': selectedCommande.statut === 'ENVOYEE',
+                  'bg-green-100 text-green-700 border border-green-300': selectedCommande.statut === 'VALIDEE',
+                  'bg-red-100 text-red-700 border border-red-300': selectedCommande.statut === 'REJETEE',
+                  'bg-blue-100 text-blue-700 border border-blue-300': selectedCommande.statut === 'LIVREE'
+          }">
+          {{ selectedCommande.statut }}
+        </span>
+      </div>
+            <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Compte</span><span class="text-gray-900 dark:text-white">{{ selectedCommande.compte }}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="mb-4">
+        <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Motif</span>
+        <div class="rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-4 text-gray-700 dark:text-gray-200 min-h-[40px]">
+          {{ selectedCommande.motif || '—' }}
+        </div>
+      </div>
+      <div class="mb-4">
+        <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Motif de retour (en cas de rejet)</span>
+        <div class="rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-4 min-h-[40px]"
+             [ngClass]="selectedCommande.motifRetour ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'">
+          {{ selectedCommande.motifRetour || 'Aucun motif de retour' }}
+        </div>
+      </div>
+      <div class="mb-4">
+        <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Catégorie de pièce</span>
+        <div class="rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-gray-700 dark:text-gray-200 min-h-[40px] w-full">
+          {{ selectedCommande.categorie || '—' }}
+        </div>
+      </div>
+      <div class="mt-4">
+        <span class="font-semibold text-fuchsia-700 dark:text-fuchsia-200">Articles :</span>
+        <div *ngIf="selectedCommande.articles && selectedCommande.articles.length > 0; else noArticlesModal">
+          <div class="mt-8 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+            <table *ngIf="selectedCommande.articles.length > 0" class="min-w-full text-sm align-baseline bg-white dark:bg-gray-900 rounded-2xl">
+              <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-xs text-left text-gray-700 uppercase dark:text-gray-400 font-sans">
+                <tr>
+                  <th class="px-4 py-3 font-sans font-bold rounded-tl-2xl">Désignation</th>
+                  <th class="px-4 py-3 font-sans font-bold">Unité</th>
+                  <th class="px-4 py-3 font-sans font-bold">Quantité</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let art of selectedCommande.articles" class="border-b dark:border-gray-700 even:bg-gray-50 dark:even:bg-gray-900/20 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-900/30 transition-colors duration-200">
+                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.article }}</td>
+                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.unite }}</td>
+                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.quantite }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <ng-template #noArticlesModal>
+          <div class="text-gray-400 dark:text-gray-500">Aucun article pour cette commande.</div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div> 
+
+<!-- Toast compact, glassmorphism, responsive, couleurs adaptées -->
+<div *ngIf="message" class="fixed top-20 right-6 left-auto z-[200] px-5 py-4 rounded-xl shadow-xl font-semibold flex items-center gap-3 min-w-[220px] max-w-[90vw] border-2 backdrop-blur-md select-none"
+     [ngClass]="[
+       messageType==='success'
+         ? (darkMode ? 'from-green-700/90 to-green-900/90 bg-gradient-to-br border-green-500' : 'bg-white/80 border-green-500')
+         : messageType==='error'
+           ? (darkMode ? 'from-pink-700/90 to-pink-900/90 bg-gradient-to-br border-pink-500' : 'bg-white/80 border-pink-500')
+           : (darkMode ? 'bg-yellow-900/80 border-yellow-500' : 'bg-yellow-50/90 border-yellow-500'),
+       showToast ? 'animate-toast-slide-in' : 'animate-toast-slide-out'
+     ]"
+     style="box-shadow: 0 4px 16px 0 rgba(60,60,90,0.10);">
+  <span class="flex items-center justify-center w-8 h-8 rounded-full mr-2"
+    [ngClass]="[
+      messageType==='success' ? (darkMode ? 'bg-green-800/40' : 'bg-green-100/60') :
+      messageType==='error' ? (darkMode ? 'bg-pink-800/40' : 'bg-pink-100/60') :
+      (darkMode ? 'bg-yellow-800/60' : 'bg-yellow-100/90')
+    ]">
+    <ng-container *ngIf="messageType==='success'">
+      <svg class="w-5 h-5 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12l4 4 8-8"/>
+      </svg>
+    </ng-container>
+    <ng-container *ngIf="messageType==='error'">
+      <svg class="w-5 h-5 text-pink-500 dark:text-pink-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path d="M3 6h18"/>
+        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        <rect x="5" y="6" width="14" height="14" rx="2"/>
+        <path d="M10 11v6M14 11v6"/>
+      </svg>
+    </ng-container>
+    <ng-container *ngIf="messageType==='warning'">
+      <svg class="w-6 h-6 text-yellow-500 dark:text-yellow-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <polygon points="12,4 22,20 2,20" fill="currentColor" opacity="0.15"/>
+        <polygon points="12,4 22,20 2,20" stroke="currentColor" stroke-width="2" fill="none"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v4m0 4h.01"/>
+      </svg>
+    </ng-container>
+  </span>
+  <span class="flex-1 text-center"
+    [ngClass]="[
+      messageType==='success'
+        ? (darkMode ? 'text-green-200 text-base' : 'text-green-700 text-base')
+        : messageType==='error'
+          ? (darkMode ? 'text-pink-200 text-base' : 'text-pink-600 text-base')
+          : (darkMode ? 'text-yellow-200 text-[1.08rem]' : 'text-yellow-700 text-[1.08rem]')
+    ]"
+  >{{ message }}</span>
+  <button (click)="closeToast()"
+    class="ml-1 p-1 rounded-full focus:outline-none transition"
+    [ngClass]="[
+      messageType==='success' ? (darkMode ? 'bg-green-800/40 hover:bg-green-700/60 focus:ring-green-400/50' : 'bg-green-100/40 hover:bg-green-200/60 focus:ring-green-400/50') :
+      messageType==='error' ? (darkMode ? 'bg-pink-800/40 hover:bg-pink-700/60 focus:ring-pink-400/50' : 'bg-pink-100/40 hover:bg-pink-200/60 focus:ring-pink-400/50') :
+      (darkMode ? 'bg-yellow-800/40 hover:bg-yellow-700/60 focus:ring-yellow-400/50' : 'bg-yellow-100/80 hover:bg-yellow-200/90 focus:ring-yellow-400/50')
+    ]"
+    aria-label="Fermer le toast">
+    <svg class="w-4 h-4"
+      [ngClass]="[
+        messageType==='success' ? (darkMode ? 'text-green-300' : 'text-green-600') :
+        messageType==='error' ? (darkMode ? 'text-pink-300' : 'text-pink-500') :
+        (darkMode ? 'text-yellow-200' : 'text-yellow-700')
+      ]"
+      fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M6 18L18 6"/></svg>
+  </button>
+</div>
+
+<!-- darkMode binding (auto) -->
+<script>
+  // Ceci est un pseudo-script pour lier darkMode à la classe du body ou à un service si besoin
+  // let darkMode = document.documentElement.classList.contains('dark');
+</script>
+
+<style>
+@keyframes toast-slide-in {
+  0% { opacity: 0; transform: translateX(120%) scale(0.9); }
+  60% { opacity: 1; transform: translateX(-8px) scale(1.05); }
+  80% { opacity: 1; transform: translateX(0) scale(1.04); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toast-slide-out {
+  0% { opacity: 1; transform: translateX(0) scale(1); }
+  100% { opacity: 0; transform: translateX(120%) scale(0.9); }
+}
+.animate-toast-slide-in { animation: toast-slide-in 0.8s cubic-bezier(.4,1.4,.6,1) both; }
+.animate-toast-slide-out { animation: toast-slide-out 0.5s cubic-bezier(.4,1.4,.6,1) both; }
+</style> 

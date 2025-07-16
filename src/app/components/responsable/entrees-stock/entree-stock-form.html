@@ -1,0 +1,101 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="max-w-3xl w-full mx-auto bg-white dark:bg-gray-900/70 dark:backdrop-blur-md rounded-2xl shadow-xl p-8 mt-8">
+  <h2 class="text-xl font-bold text-blue-700 dark:text-blue-300 mb-6">Nouvelle entrée en stock</h2>
+  <form (ngSubmit)="save()" (reset)="resetForm()" autocomplete="off">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Numéro de pièce</label>
+        <input type="text" class="w-full rounded-lg border border-blue-500 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white" [(ngModel)]="entree.numero_piece" name="numero_piece" required [ngClass]="{'border-red-500': showError && !entree.numero_piece}" />
+        <div *ngIf="showError && !entree.numero_piece" class="text-xs text-red-500">Numéro de pièce requis.</div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Date d'entrée</label>
+        <input type="date" class="w-full rounded-lg border border-blue-500 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white" [(ngModel)]="entree.date_entree" name="date_entree" />
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium mb-1">Marchandise</label>
+        <input type="text" class="w-full rounded-lg border border-blue-500 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white" [(ngModel)]="entree.marchandise" name="marchandise" required [ngClass]="{'border-red-500': showError && !entree.marchandise}" />
+        <div *ngIf="showError && !entree.marchandise" class="text-xs text-red-500">Marchandise requise.</div>
+      </div>
+    </div>
+    <!-- Champ téléphone +261 -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Téléphone</label>
+      <div class="flex">
+        <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-blue-500 rounded-l-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+          +261
+        </span>
+        <input type="tel" class="rounded-none rounded-r-lg bg-gray-50 border border-blue-500 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" [(ngModel)]="entree.telephone" name="telephone" placeholder="Numéro de téléphone" pattern="[0-9]{9}" [ngClass]="{'border-red-500': showError && !entree.telephone}" required />
+      </div>
+      <div *ngIf="showError && !entree.telephone" class="text-xs text-red-500">Téléphone requis (9 chiffres).</div>
+    </div>
+    <!-- Drag & Drop fichier -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Justificatif (optionnel)</label>
+      <div class="flex items-center justify-center w-full">
+        <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-40 border-2 border-blue-500 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-blue-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4a1 1 0 011-1h8a1 1 0 011 1v12m-4 4h-4a1 1 0 01-1-1v-4h6v4a1 1 0 01-1 1z"></path></svg>
+            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Cliquez pour importer</span> ou glissez-déposez</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG ou GIF (MAX. 800x400px)</p>
+          </div>
+          <input id="dropzone-file" type="file" class="hidden" (change)="onFileChange($event)" />
+        </label>
+      </div>
+      <div *ngIf="showError && fileError" class="text-xs text-red-500">{{fileError}}</div>
+    </div>
+    <!-- Articles -->
+    <div class="mt-6 mb-2">
+      <h3 class="font-semibold text-blue-700 dark:text-blue-300 mb-2">Articles de l'entrée</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+        <!-- Catégorie -->
+        <select class="rounded-lg border border-blue-500 dark:bg-gray-800 dark:text-white" 
+                [ngClass]="{'border-red-500': showError && !selectedCategorie}" 
+                [(ngModel)]="selectedCategorie" name="categorie" (change)="onCategorieChange()" required>
+          <option value="">Catégorie...</option>
+          <option *ngFor="let cat of categories" [value]="cat">{{cat}}</option>
+        </select>
+        <div *ngIf="showError && !selectedCategorie" class="text-xs text-red-500">Catégorie requise.</div>
+        <!-- Article (dépend de la catégorie) -->
+        <select class="rounded-lg border border-blue-500 dark:bg-gray-800 dark:text-white" 
+                [ngClass]="{'border-red-500': showError && !selectedArticle}" 
+                [(ngModel)]="selectedArticle" name="article" (change)="onArticleChange()" [disabled]="!selectedCategorie" required>
+          <option value="">Article...</option>
+          <option *ngFor="let art of articlesParCategorie[selectedCategorie]" [value]="art">{{art}}</option>
+        </select>
+        <div *ngIf="showError && !selectedArticle" class="text-xs text-red-500">Article requis.</div>
+        <!-- Unité (readonly) -->
+        <input type="text" class="rounded-lg border border-blue-500 dark:bg-gray-800 dark:text-white" [value]="uniteParArticle[selectedArticle] || ''" name="unite" placeholder="Unité" readonly />
+        <!-- Quantité -->
+        <input type="number" min="1" class="rounded-lg border border-blue-500 dark:bg-gray-800 dark:text-white" 
+               [ngClass]="{'border-red-500': showError && (!ligne.quantite || ligne.quantite <= 0)}" 
+               placeholder="Quantité" [(ngModel)]="ligne.quantite" name="quantite" />
+        <div *ngIf="showError && (!ligne.quantite || ligne.quantite <= 0)" class="text-xs text-red-500">Quantité requise.</div>
+        <!-- Prix unitaire -->
+        <input type="number" min="0" class="rounded-lg border border-blue-500 dark:bg-gray-800 dark:text-white" placeholder="Prix unitaire" [(ngModel)]="ligne.prix_unitaire" name="prix_unitaire" />
+        <!-- Magasin -->
+        <input type="text" class="rounded-lg border border-blue-500 dark:bg-gray-800 dark:text-white" placeholder="Magasin" [(ngModel)]="ligne.magasin" name="magasin" />
+        <!-- Étagère -->
+        <input type="text" class="rounded-lg border border-blue-500 dark:bg-gray-800 dark:text-white" placeholder="Étagère" [(ngModel)]="ligne.etagere" name="etagere" />
+      </div>
+      <button type="button" (click)="addLigne()"
+        [disabled]="!selectedCategorie || !selectedArticle || !ligne.quantite || ligne.quantite <= 0"
+        class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 hover:bg-blue-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+        + Ajouter l'article
+      </button>
+    </div>
+    <div *ngIf="lignes.length > 0" class="mb-4">
+      <div *ngFor="let l of lignes; let i = index" class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg px-3 py-2 mb-2">
+        <span class="flex-1">{{ l.designation || l.article }} ({{ l.quantite }}) - {{ l.prix_unitaire | number }} Ar, {{ l.magasin }}, {{ l.etagere }}</span>
+        <button type="button" (click)="removeLigne(i)" class="text-red-500 hover:underline text-xs">Supprimer</button>
+      </div>
+    </div>
+    <!-- Boutons d'action -->
+    <div class="flex justify-end mt-6 gap-4">
+      <button type="reset" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-xl shadow hover:bg-gray-300 transition font-semibold border border-blue-500">Réinitialiser</button>
+      <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition font-semibold">Enregistrer</button>
+    </div>
+  </form>
+  </div>
+</div>
+

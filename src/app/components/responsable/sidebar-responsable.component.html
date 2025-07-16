@@ -1,0 +1,63 @@
+<nav *ngIf="isVisible" class="w-64 h-full flex flex-col justify-between bg-white dark:bg-gray-900/80 border border-gray-200 rounded-lg dark:border-gray-700 shadow-2xl backdrop-blur-lg animate-fade-in overflow-hidden transition-all duration-500 p-4">
+  <!-- Menu navigation -->
+  <ul class="flex-1 flex flex-col gap-3 pt-4">
+    <li *ngFor="let item of menu; let idx = index">
+      <button (click)="onMenuClick(item)"
+        class="group w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left whitespace-nowrap text-sm transition-all duration-300 bg-gradient-to-r from-transparent to-transparent focus:outline-none focus:ring-2 focus:ring-violet-400 relative overflow-hidden
+        text-gray-400 dark:text-gray-400 hover:text-violet-400 dark:hover:text-violet-200 hover:bg-violet-50/60 dark:hover:bg-violet-900/30 font-normal items-center"
+        [ngClass]="{
+          'bg-violet-100/60 dark:bg-violet-900/40 text-violet-500 dark:text-violet-200 shadow': isActive(item),
+          'text-gray-400 dark:text-gray-400': !isActive(item)
+        }">
+        <span class="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 min-w-[1.5rem] flex items-center justify-center"
+              [ngClass]="isActive(item) ? 'text-violet-500 dark:text-violet-200' : 'text-gray-400 dark:text-gray-400'">
+          <ng-container [ngSwitch]="item.label">
+            <!-- 1. Tableau de bord (bar-chart) -->
+            <svg *ngSwitchCase="'Tableau de bord'" xmlns="http://www.w3.org/2000/svg" class="icon icon-dashboard w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path d="M3 3v18h18"/>
+              <rect x="6" y="10" width="2" height="8" />
+              <rect x="10" y="6" width="2" height="12" />
+              <rect x="14" y="12" width="2" height="6" />
+            </svg>
+            <!-- 2. Entrées en stock -->
+            <svg *ngSwitchCase="'Entrées en stock'" xmlns="http://www.w3.org/2000/svg" class="icon icon-stock w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v8M8 12h8"/>
+            </svg>
+            <!-- 3. Inventaire -->
+            <svg *ngSwitchCase="'Inventaire'" xmlns="http://www.w3.org/2000/svg" class="icon icon-inventaire w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path d="M9 2h6a2 2 0 012 2v2H7V4a2 2 0 012-2z" />
+              <path d="M7 6h10v14a2 2 0 01-2 2H9a2 2 0 01-2-2V6z" />
+              <path d="M9 10h6M9 14h6M9 18h6"/>
+            </svg>
+            <!-- 4. Expression de besoins -->
+            <svg *ngSwitchCase="'Expression de besoins'" xmlns="http://www.w3.org/2000/svg" class="icon icon-besoins w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path d="M8 8h4M8 12h8M8 16h8"/>
+              <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
+            </svg>
+            <!-- 5. Livraison & Affectation -->
+            <svg *ngSwitchCase="'Livraison & Affectation'" xmlns="http://www.w3.org/2000/svg" class="icon icon-livraison w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path d="M3 7h13v10H3V7z" />
+              <path d="M16 10h4l1 2v5h-5V10z" />
+              <circle cx="5.5" cy="18.5" r="1.5"/>
+              <circle cx="17.5" cy="18.5" r="1.5"/>
+            </svg>
+          </ng-container>
+        </span>
+        <span class="whitespace-nowrap transition-colors duration-300 group-hover:text-violet-500 group-focus:text-violet-700 dark:group-hover:text-violet-200 font-semibold text-gray-500 dark:text-gray-400 flex flex-col justify-center h-full">{{ item.label }}</span>
+        <span *ngIf="isActive(item)" class="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-violet-400 animate-pulse"></span>
+      </button>
+    </li>
+  </ul>
+  <!-- Bloc info profil et déconnexion en bas -->
+  <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col items-center w-full absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900/80">
+    <button class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition font-semibold whitespace-nowrap text-sm shadow focus:outline-none focus:ring-2 focus:ring-violet-400 mb-2">
+      <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A9 9 0 1112 21a9 9 0 01-6.879-3.196z"/></svg>
+      Information de profil
+    </button>
+    <button (click)="onMenuClick({action: 'logout'})" class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 transition font-semibold whitespace-nowrap text-sm shadow focus:outline-none focus:ring-2 focus:ring-red-400 max-w-full">
+      <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"/></svg>
+      Déconnexion
+    </button>
+  </div>
+</nav>

@@ -1,0 +1,658 @@
+<app-header></app-header>
+<div class="flex gap-4 pt-20 px-4 min-h-screen mx-auto" style="max-width: 100rem;">
+  <!-- Sidebar sticky, pleine hauteur -->
+  <aside class="h-100vh sticky top-20 w-64 ">
+    <sidebar-responsable></sidebar-responsable>
+  </aside>
+  <!-- Main content (scrollable) -->
+  <main class="flex-1 h-[calc(100vh-6rem)] overflow-y-auto bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-xl ">
+    <div class="max-w-6xl mx-auto">
+      <!-- Bloc sticky pour titre, recherche, filtres, boutons -->
+      <div class="sticky top-0 z-30 bg-white dark:bg-gray-900 px-4 my-2 border border-gray-200 dark:border-gray-700 rounded-lg pt-4 pb-2">
+        <div class="flex flex-col gap-2 mb-2">
+        <!-- Titre seul en haut -->
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2 font-sans">Entrées en stock</h1>
+        <!-- Barre de recherche + bouton ajout -->
+          <div class="flex flex-row items-center gap-2 w-full">
+            <div class="flex-1 flex flex-row items-stretch gap-2">
+              <div class="relative w-full max-w-md flex items-stretch gap-2">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+                <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onFilterChange()" placeholder="Rechercher..." class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition w-full h-full" />
+                <div class="flex items-stretch">
+                  <button (click)="resetFilters()" class="flex items-center gap-1 px-5 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg text-sm font-medium shadow hover:bg-gray-300 dark:hover:bg-gray-700 transition h-full">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    Réinitialiser
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button (click)="openCreateModal()" class="inline-flex items-center gap-2 px-5 py-2 bg-violet-600 text-white rounded-lg shadow hover:bg-violet-700 transition font-semibold">
+            <span class="text-lg">+</span> <span>Nouvelle entrée</span>
+          </button>
+        </div>
+          <!-- Ligne de filtres alignée sur la largeur de la barre de recherche -->
+          <div class="w-full max-w-md flex flex-row flex-wrap items-center gap-2 mt-2">
+          <button (click)="toggleViewMode()" class="p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            <svg *ngIf="viewMode === 'cards'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/></svg>
+            <svg *ngIf="viewMode === 'table'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          </button>
+            <div class="relative min-w-[180px] flex-1">
+              <button type="button" (click)="showDateRange = !showDateRange" class="date-range-toggle flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition w-full">
+                <!-- Icône calendrier -->
+                <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <span *ngIf="filterDateStart && filterDateEnd">Du {{ filterDateStart | date:'shortDate' }} au {{ filterDateEnd | date:'shortDate' }}</span>
+                <span *ngIf="filterDateStart && !filterDateEnd">Depuis le {{ filterDateStart | date:'shortDate' }}</span>
+                <span *ngIf="!filterDateStart && filterDateEnd">Jusqu'au {{ filterDateEnd | date:'shortDate' }}</span>
+                <span *ngIf="!filterDateStart && !filterDateEnd" class="text-gray-400">Plage de dates</span>
+                <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div *ngIf="showDateRange" #dateRangeDropdown class="absolute left-0 right-0 mx-auto z-[10050] mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-4 min-w-full max-w-md overflow-x-auto animate-fade-in">
+                <div class="flex flex-col gap-2">
+                  <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Du</label>
+                    <input type="date" [(ngModel)]="filterDateStart" (change)="onDateStartChange()" class="rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition w-full" />
+                    <label class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-2 mb-1">Au</label>
+                    <input type="date" [(ngModel)]="filterDateEnd" (change)="onDateEndChange()" class="rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition w-full" />
+                  </div>
+                  <div class="flex flex-wrap gap-2 mt-2">
+                    <button type="button" (click)="setQuickRange('today')" class="px-2 py-1 rounded bg-violet-100 text-violet-700 hover:bg-violet-200 text-xs">Aujourd'hui</button>
+                    <button type="button" (click)="setQuickRange('week')" class="px-2 py-1 rounded bg-violet-100 text-violet-700 hover:bg-violet-200 text-xs">Cette semaine</button>
+                    <button type="button" (click)="setQuickRange('month')" class="px-2 py-1 rounded bg-violet-100 text-violet-700 hover:bg-violet-200 text-xs">Ce mois-ci</button>
+                    <button type="button" (click)="setQuickRange('30days')" class="px-2 py-1 rounded bg-violet-100 text-violet-700 hover:bg-violet-200 text-xs">30 derniers jours</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+          <select [(ngModel)]="filterStatut" (ngModelChange)="onFilterChange()" class="rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition w-32">
+            <option value="">Tous </option>
+            <option value="BROUILLON">Brouillon</option>
+            <option value="VALIDEE">Validée</option>
+            <option value="REJETEE">Rejetée</option>
+          </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Fin du bloc sticky -->
+      <div *ngIf="filteredPieces.length === 0" class="text-center text-gray-400 dark:text-gray-500 py-12">
+        Aucun résultat pour la recherche ou le filtre sélectionné.
+      </div>
+      <ng-container *ngIf="viewMode === 'cards'">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div *ngFor="let piece of filteredPieces; trackBy: trackByPieceId"
+            class="group bg-white/80 dark:bg-gray-800/80 rounded-xl shadow-md p-6 flex flex-col min-h-[180px] border border-violet-100 dark:border-violet-900/40 relative cursor-pointer transition-all duration-200 backdrop-blur-sm hover:shadow-lg hover:bg-white/90 dark:hover:bg-gray-800/90 hover:border-violet-400"
+            (click)="openDetail(piece)">
+            <!-- Zone d'actions flottantes en haut à droite -->
+            <div class="absolute top-4 right-4 flex items-center gap-2 z-20">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold shadow"
+              [ngClass]="{
+                'bg-yellow-100 text-yellow-700 border border-yellow-300': piece.statut === 'BROUILLON',
+                'bg-green-100 text-green-700 border border-green-300': piece.statut === 'VALIDEE',
+                'bg-red-100 text-red-700 border border-red-300': piece.statut === 'REJETEE'
+                }"
+                [ngStyle]="piece.statut === 'BROUILLON' ? {'background': 'oklch(97.3% 0.071 103.193)', 'color': '#7c6f00', 'border': '1px solid #f3e88b'} : {}">
+              {{ piece.statut }}
+            </span>
+              <div class="relative">
+                <button class="card-action-menu-btn bg-white/80 dark:bg-gray-900/80 rounded-full p-2 shadow hover:bg-violet-100 dark:hover:bg-violet-800 transition-opacity duration-200 focus:outline-none" title="Plus d'actions" (click)="$event.stopPropagation(); piece.actionMenuOpen = !piece.actionMenuOpen">
+                  <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="4" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="10" cy="16" r="1.5"/></svg>
+                </button>
+                <div *ngIf="piece.actionMenuOpen" class="card-action-menu-dropdown absolute right-0 mt-2 w-36 rounded-xl shadow-lg bg-white dark:bg-gray-900 border border-violet-100 dark:border-violet-900/40 z-30 animate-fade-in">
+                  <button (click)="openUpdate(piece); piece.actionMenuOpen = false" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-violet-700 dark:text-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900 transition text-left">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 1 1 3.182 3.182l-11.25 11.25a2 2 0 0 1-.878.513l-4 1a.5.5 0 0 1-.606-.606l1-4a2 2 0 0 1 .513-.878l11.25-11.25z" />
+                    </svg>
+                    Mise à jour
+                  </button>
+                  <button (click)="deletePiece(piece.id); piece.actionMenuOpen = false" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 transition text-left">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="font-bold text-lg text-violet-700 dark:text-violet-300 truncate max-w-[14rem] mb-1 relative">
+              <span class="relative z-10">{{ capitalizeFirstLetter(piece.numero_piece) }}</span>
+              <span class="absolute left-0 bottom-0 w-full h-0.5 bg-gradient-to-r from-violet-400 to-pink-400 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300 rounded-full"></span>
+            </div>
+            <div class="text-xs text-gray-400 dark:text-gray-500 mb-1">{{ piece.articles?.length || 0 }} article{{ piece.articles?.length > 1 ? 's' : '' }}</div>
+            <div class="text-sm text-gray-700 dark:text-gray-200 truncate mb-1 flex items-center justify-between">Date : <span class="font-semibold text-gray-700 dark:text-gray-200 ml-auto text-right">{{ piece.date_piece | date:'shortDate' }}</span></div>
+            <div class="text-sm text-gray-700 dark:text-gray-200 truncate mb-1 flex items-center justify-between">Marché : <span class="font-semibold ml-auto text-right">{{ piece.marche }}</span></div>
+            <div class="text-sm text-gray-700 dark:text-gray-200 truncate mb-1 flex items-center justify-between">Catégorie : <span class="font-semibold ml-auto text-right">{{ piece.categorie_article }}</span></div>
+            <div class="text-sm text-gray-700 dark:text-gray-200 truncate mb-1 flex items-center justify-between">Compte : <span class="font-semibold ml-auto text-right">{{ piece.compte }}</span></div>
+            <div class="flex-1"></div>
+            <div class="text-xs text-gray-400 dark:text-gray-500 mt-2 text-right italic">Voir le détail des articles en mode tableau</div>
+          </div>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="viewMode === 'table'">
+        <div class="overflow-x-auto max-h-[60vh] overflow-y-auto rounded-2xl shadow border border-violet-100 dark:border-violet-900/40 bg-white dark:bg-gray-900">
+          <table class="min-w-full text-sm align-baseline">
+            <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-xs text-left text-gray-700 uppercase dark:text-gray-400 font-sans">
+              <tr>
+                <th scope="col" class="px-4 py-3 font-sans font-bold">Numéro de pièce</th>
+                <th scope="col" class="px-4 py-3 font-sans font-bold">Date</th>
+                <th scope="col" class="px-4 py-3 font-sans font-bold">Marché</th>
+                <th scope="col" class="px-4 py-3 font-sans font-bold">Catégorie</th>
+                <th scope="col" class="px-4 py-3 font-sans font-bold">Compte</th>
+                <th scope="col" class="px-4 py-3 font-sans font-bold">Livraison</th>
+                <th scope="col" class="px-4 py-3 font-sans font-bold">Statut</th>
+                <th scope="col" class="px-4 py-3 font-sans font-bold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let piece of filteredPieces; trackBy: trackByPieceId">
+                <tr class="border-b dark:border-gray-700 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors duration-200">
+                  <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ piece.numero_piece }}</td>
+                  <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ piece.date_piece | date:'shortDate' }}</td>
+                  <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ piece.marche }}</td>
+                  <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ piece.categorie_article }}</td>
+                  <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ piece.compte }}</td>
+                  <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ piece.tous_livres || '—' }}</td>
+                  <td class="px-4 py-3">
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold shadow"
+                      [ngClass]="{
+                        'bg-yellow-100 text-yellow-700 border border-yellow-300': piece.statut === 'BROUILLON',
+                        'bg-green-100 text-green-700 border border-green-300': piece.statut === 'VALIDEE',
+                        'bg-red-100 text-red-700 border border-red-300': piece.statut === 'REJETEE'
+                      }">
+                      {{ piece.statut }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 flex gap-2 items-center justify-end relative">
+                    <button (click)="toggleRow(piece)" class="p-2 rounded-full hover:bg-violet-100 dark:hover:bg-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-400 transition">
+                      <svg *ngIf="expandedPiece?.id !== piece.id" class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5c-7 0-9 7.5-9 7.5s2 7.5 9 7.5 9-7.5 9-7.5-2-7.5-9-7.5zm0 10a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg>
+                      <svg *ngIf="expandedPiece?.id === piece.id" class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    <div class="relative">
+                      <button (click)="$event.stopPropagation(); piece.actionMenuOpen = !piece.actionMenuOpen" class="card-action-menu-btn bg-white/80 dark:bg-gray-900/80 rounded-full p-2 shadow hover:bg-violet-100 dark:hover:bg-violet-800 transition-opacity duration-200 focus:outline-none" title="Plus d'actions">
+                        <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="4" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="10" cy="16" r="1.5"/></svg>
+                      </button>
+                      <div *ngIf="piece.actionMenuOpen" class="card-action-menu-dropdown absolute right-0 mt-2 w-36 rounded-xl shadow-lg bg-white dark:bg-gray-900 border border-violet-100 dark:border-violet-900/40 z-30 animate-fade-in">
+                        <button (click)="openUpdate(piece); piece.actionMenuOpen = false" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-violet-700 dark:text-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900 transition text-left">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 1 1 3.182 3.182l-11.25 11.25a2 2 0 0 1-.878.513l-4 1a.5.5 0 0 1-.606-.606l1-4a2 2 0 0 1 .513-.878l11.25-11.25z" />
+                          </svg>
+                          Mise à jour
+                        </button>
+                        <button (click)="deletePiece(piece.id); piece.actionMenuOpen = false" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 transition text-left">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                          Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="8" class="p-0 border-none">
+                    <div
+                      class="transition-all duration-300 overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 mx-4 my-2 shadow"
+                      [ngClass]="{
+                        'max-h-0 p-0': expandedPiece?.id !== piece.id,
+                        'max-h-[600px] p-6': expandedPiece?.id === piece.id
+                      }"
+                      style="will-change: max-height;"
+                    >
+                      <div *ngIf="expandedPiece?.id === piece.id">
+                        <div class="mb-2">
+                          <span class="font-semibold text-violet-700 dark:text-violet-200 block mb-1">Commentaire :</span>
+                          <div class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 px-4 py-2 min-h-[40px] whitespace-pre-line break-words w-full">{{ piece.commentaire || '—' }}</div>
+                        </div>
+                        <div class="mb-2">
+                          <span class="font-semibold text-violet-700 dark:text-violet-200 block mb-1">Catégorie :</span>
+                          <div class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 px-4 py-2 min-h-[40px] break-words w-full">{{ getCategorieLabel(piece.categorie_article) }}</div>
+                        </div>
+                        <div class="flex flex-wrap gap-8 items-center mb-2">
+                          <div><span class="font-semibold text-violet-700 dark:text-violet-200">Téléphone :</span> <span class="ml-2 text-gray-700 dark:text-gray-200">{{ piece.telephone || '—' }}</span></div>
+                      </div>
+                        <div class="flex items-center justify-between mb-4">
+                        <span class="font-semibold text-violet-700 dark:text-violet-200">Articles :</span>
+                          <button (click)="openArticleModal(piece)" class="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg shadow hover:bg-violet-700 transition font-semibold text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            Ajouter un article
+                          </button>
+                        </div>
+                        <div *ngIf="piece.articles && piece.articles.length > 0" class="mt-4 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+                          <div class="overflow-x-auto max-h-64">
+                            <table class="min-w-full text-sm align-baseline bg-white dark:bg-gray-900 rounded-2xl">
+                              <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-xs text-left text-gray-700 uppercase dark:text-gray-400 font-sans">
+                                <tr>
+                                  <th class="px-4 py-3 font-sans font-bold rounded-tl-2xl">Désignation</th>
+                                  <th class="px-4 py-3 font-sans font-bold">Unité</th>
+                                  <th class="px-4 py-3 font-sans font-bold">Prix unitaire</th>
+                                  <th class="px-4 py-3 font-sans font-bold">Quantité</th>
+                                  <th class="px-4 py-3 font-sans font-bold">Date de péremption</th>
+                                  <th class="px-4 py-3 font-sans font-bold rounded-tr-2xl text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let art of piece.articles; let i = index" class="border-b dark:border-gray-700 even:bg-gray-50 dark:even:bg-gray-900/20 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors duration-200">
+                                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.designation }}</td>
+                                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.unite }}</td>
+                                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.prix_unitaire }}</td>
+                                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.quantite }}</td>
+                                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.date_peremption | date:'shortDate' }}</td>
+                                  <td class="px-4 py-3 relative">
+                                    <div class="flex gap-2 items-center justify-end">
+                                      <div class="relative">
+                                        <button (click)="$event.stopPropagation(); art.actionMenuOpen = !art.actionMenuOpen" class="card-action-menu-btn bg-white/80 dark:bg-gray-900/80 rounded-full p-2 shadow hover:bg-violet-100 dark:hover:bg-violet-800 transition-opacity duration-200 focus:outline-none" title="Plus d'actions">
+                                          <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="4" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="10" cy="16" r="1.5"/></svg>
+                                        </button>
+                                        <div *ngIf="art.actionMenuOpen" class="card-action-menu-dropdown absolute right-0 mt-2 w-36 rounded-xl shadow-lg bg-white dark:bg-gray-900 border border-violet-100 dark:border-violet-900/40 z-30 animate-fade-in">
+                                          <button (click)="editArticle(piece, i); art.actionMenuOpen = false" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-violet-700 dark:text-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900 transition text-left">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 1 1 3.182 3.182l-11.25 11.25a2 2 0 0 1-.878.513l-4 1a.5.5 0 0 1-.606-.606l1-4a2 2 0 0 1 .513-.878l11.25-11.25z" />
+                                            </svg>
+                                            Modifier
+                                  </button>
+                                          <button (click)="deleteArticle(piece, i); art.actionMenuOpen = false" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 transition text-left">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            Supprimer
+                                  </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      </div>
+                    </div>
+                </td>
+              </tr>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+      <!-- Pagination -->
+      <div *ngIf="totalPages > 1" class="flex justify-between items-center mt-8 gap-1">
+        <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          Afficher
+          <select [(ngModel)]="pageSize" (ngModelChange)="onFilterChange()" class="rounded-lg border border-gray-400 dark:bg-gray-700 dark:text-white px-2 py-1 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition">
+            <option [ngValue]="6">6</option>
+            <option [ngValue]="9">9</option>
+            <option [ngValue]="12">12</option>
+            <option [ngValue]="24">24</option>
+          </select>
+          par page
+        </div>
+        <div class="flex justify-center gap-1">
+          <button *ngFor="let page of [].constructor(totalPages); let i = index" (click)="setPage(i+1)"
+            [ngClass]="{'bg-violet-600 text-white': currentPage === (i+1), 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300': currentPage !== (i+1)}"
+            class="px-3 py-1 rounded-full font-semibold shadow hover:bg-violet-700 hover:text-white transition text-sm">
+            {{ i+1 }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast de confirmation -->
+<div *ngIf="messageToast" class="fixed top-6 left-1/2 z-[9999] -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 animate-fade-in-up transition-all duration-300">
+  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+  <span>{{ messageToast }}</span>
+</div>
+
+<!-- Modal de détail -->
+<div *ngIf="selectedPiece && viewMode === 'cards'" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+  <div class="w-full max-w-3xl mx-auto my-8 flex flex-col bg-white dark:bg-gray-900/70 dark:backdrop-blur-md border border-gray-200 dark:border-gray-600 rounded-2xl shadow-2xl relative animate-fade-in max-h-[90vh]">
+    <div class="sticky top-0 z-20 flex items-center justify-between px-6 pt-6 pb-4 bg-white dark:bg-gray-900 rounded-t-2xl shadow-sm">
+      <h2 class="text-2xl font-bold text-violet-700 dark:text-violet-300 text-center flex-1">Détail de l'entrée</h2>
+      <button (click)="closeDetail()" class="ml-4 p-2 rounded-full bg-white/80 dark:bg-gray-800/80 shadow hover:bg-violet-100 dark:hover:bg-violet-800 transition text-gray-400 hover:text-violet-600">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    </div>
+    <div class="overflow-y-auto px-6 pb-6 pt-2" style="max-height:70vh;">
+      <div class="flex flex-col md:flex-row md:gap-6 mb-4">
+        <div class="flex-1 space-y-2">
+          <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Numéro de pièce</span><span class="font-mono text-gray-900 dark:text-white">{{ selectedPiece.numero_piece }}</span></div>
+          <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Date d'entrée</span><span class="text-gray-900 dark:text-white">{{ selectedPiece.date_piece | date:'shortDate' }}</span></div>
+          <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Marché</span><span class="text-gray-900 dark:text-white">{{ selectedPiece.marche }}</span></div>
+          <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Catégorie</span><span class="text-gray-900 dark:text-white">{{ selectedPiece.categorie_article }}</span></div>
+    </div>
+        <div class="flex-1 space-y-2">
+          <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Compte</span><span class="text-gray-900 dark:text-white">{{ selectedPiece.compte }}</span></div>
+          <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Téléphone</span><span class="text-gray-900 dark:text-white">{{ selectedPiece.telephone }}</span></div>
+          <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Statut</span>
+      <span class="px-3 py-1 rounded-full text-xs font-semibold"
+        [ngClass]="{
+                'bg-yellow-100 text-yellow-700 border border-yellow-300': selectedPiece.statut === 'BROUILLON',
+                'bg-green-100 text-green-700 border border-green-300': selectedPiece.statut === 'VALIDEE',
+                'bg-red-100 text-red-700 border border-red-300': selectedPiece.statut === 'REJETEE'
+        }">
+        {{ selectedPiece.statut }}
+      </span>
+    </div>
+        </div>
+      </div>
+      <div class="mb-4">
+        <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Commentaire</span>
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-4 text-gray-700 dark:text-gray-200 min-h-[40px]">
+          {{ selectedPiece.commentaire || '—' }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de création -->
+<div *ngIf="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+  <div class="w-full max-w-3xl mx-auto my-8 flex flex-col bg-white dark:bg-gray-900/90 dark:backdrop-blur-md border border-gray-200 dark:border-gray-600 rounded-2xl shadow-2xl relative animate-fade-in max-h-[90vh]">
+    <div class="sticky top-0 z-10 bg-white dark:bg-gray-900 rounded-t-2xl shadow-sm px-6 pt-6 pb-4 flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center w-full">Nouvelle entrée en stock</h2>
+      <button (click)="closeCreateModal()" class="absolute top-6 right-6 text-gray-400 hover:text-violet-600">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    </div>
+    <div class="overflow-y-auto px-6 pb-6 pt-2" style="max-height:70vh;">
+      <form class="space-y-5" #createForm="ngForm" (ngSubmit)="createPiece(newPiece)" (reset)="resetCreateForm()" autocomplete="off">
+        <div class="flex gap-2">
+          <div class="w-1/2">
+            <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Pièce N°</label>
+            <input type="text" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="newPiece.numero_piece" name="numero_piece" required [ngClass]="{'border-red-500': showCreateError && !newPiece.numero_piece}" placeholder="Facture N°" />
+            <div *ngIf="showCreateError && !newPiece.numero_piece" class="text-xs text-red-500">Numéro requis.</div>
+          </div>
+          <div class="w-1/2">
+            <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Date du pièce</label>
+            <input type="date" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="newPiece.date_piece" name="date_piece" required [ngClass]="{'border-red-500': showCreateError && !newPiece.date_piece}" />
+            <div *ngIf="showCreateError && !newPiece.date_piece" class="text-xs text-red-500">Date requise.</div>
+        </div>
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Marché</label>
+          <input type="text" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="newPiece.marche" name="marche" required [ngClass]="{'border-red-500': showCreateError && !newPiece.marche}" placeholder="Marché" />
+          <div *ngIf="showCreateError && !newPiece.marche" class="text-xs text-red-500">Marché requis.</div>
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Catégorie d'Article</label>
+          <select class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="newPiece.categorie_article" name="categorie_article" required [ngClass]="{'border-red-500': showCreateError && !newPiece.categorie_article}">
+            <option value="">Choisir catégorie...</option>
+            <option value="6215">Entretien et reparation des materiels et mobiliers (6215)</option>
+            <option value="6111">Fournitures et articles de bureau (6111)</option>
+            <option value="6225">Frais de colloques, seminaires, conferences (6225)</option>
+            <option value="6261">Frais postaux (6261)</option>
+            <option value="6117">Habillement (6117)</option>
+            <option value="6224">Impression, reliures, insertions, publicite et promotion (6224)</option>
+            <option value="6112">Imprimes, cachets et documents administratifs (6112)</option>
+            <option value="2457">Installations, agencements et amenagements ? Reseaux (2457)</option>
+            <option value="6116">Instruments specialises (6116)</option>
+            <option value="6216">Maintenance des materiels informatiques, électriques, électroniques et téléphoniques (6216)</option>
+            <option value="6217">Maintenance des réseaux, logiciels et systèmes informatiques (6217)</option>
+            <option value="2464">Materiels et mobiliers de bureau (2464)</option>
+            <option value="2463">Matériels informatiques, électriques, électroniques et téléphoniques (2463)</option>
+            <option value="2461">Materiels techniques (2461)</option>
+            <option value="6115">Petits outillages et fournitures d'atelier (6115)</option>
+            <option value="6125">Produits alimentaires (6125)</option>
+            <option value="6114">Produits, petits materiels et menues depenses d'entretien (6114)</option>
+            <option value="6123">Produits pharmaceutiques (6123)</option>
+            <option value="6263">Redevances telephoniques mobiles (6263)</option>
+            <option value="2472">Véhicules terrestres (2472)</option>
+            <option value="2468">Autres materiels et outillages (2468)</option>
+            <option value="6113">Consomptibles informatiques (6113)</option>
+            <option value="6223">Documentation et abonnement (6223)</option>
+            <option value="6211">Entretien de batiments (6211)</option>
+            <option value="6213">Entretien de matériels de transports (6213)</option>
+          </select>
+          <div *ngIf="showCreateError && !newPiece.categorie_article" class="text-xs text-red-500">Catégorie requise.</div>
+        </div>
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="flex-1">
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Compte</label>
+          <select class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="newPiece.compte" name="compte" required>
+            <option value="DSP">DSP</option>
+          </select>
+        </div>
+          <div class="flex-1">
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Téléphone</label>
+          <div class="flex">
+            <span class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-600">+261</span>
+            <input type="tel" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-r-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="newPiece.telephone" name="telephone" placeholder="Numéro de téléphone" pattern="[0-9]{9}" [ngClass]="{'border-red-500': showCreateError && !newPiece.telephone}" required style="border-top-left-radius: 0; border-bottom-left-radius: 0;" />
+          </div>
+          <div *ngIf="showCreateError && !newPiece.telephone" class="text-xs text-red-500">Téléphone requis (9 chiffres).</div>
+          </div>
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Est-ce que tous les articles sont livrés ?</label>
+          <div class="flex gap-6 mt-1">
+            <label class="inline-flex items-center cursor-pointer">
+              <input type="radio" class="form-radio text-violet-600" [(ngModel)]="newPiece.tous_livres" name="tous_livres" value="oui" required />
+              <span class="ml-2 dark:text-white">Oui</span>
+            </label>
+            <label class="inline-flex items-center cursor-pointer">
+              <input type="radio" class="form-radio text-violet-600" [(ngModel)]="newPiece.tous_livres" name="tous_livres" value="non" required />
+              <span class="ml-2 dark:text-white">Non</span>
+            </label>
+          </div>
+          <div *ngIf="showCreateError && !newPiece.tous_livres" class="text-xs text-red-500">Réponse requise.</div>
+      </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Commentaire</label>
+          <textarea class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="newPiece.commentaire" name="commentaire" placeholder="Commentaire"></textarea>
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Pièce justificative</label>
+          <div class="flex items-center justify-center w-full">
+            <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-violet-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+              <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4a1 1 0 011-1h8a1 1 0 011 1v12m-4 4h-4a1 1 0 01-1-1v-4h6v4a1 1 0 01-1 1z"></path></svg>
+                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Cliquez pour importer</span> ou glissez-déposez</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG ou GIF (MAX. 800x400px)</p>
+              </div>
+              <input id="dropzone-file" type="file" class="hidden" (change)="onFileSelected($event)" />
+            </label>
+      </div>
+          <div *ngIf="showCreateError && fileCreateError" class="text-xs text-red-500">{{fileCreateError}}</div>
+        </div>
+        <div class="flex justify-end mt-6 gap-4">
+          <button *ngIf="editMode" type="button" (click)="editMode = false; editIndex = -1; articleFormData = {designation:'',unite:'',prix_unitaire:'',quantite:'',date_peremption:''}; selectedArticle=''; selectedUnite=''; articleFormSubmitted=false;" class="w-1/3 text-gray-900 bg-gray-100 hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center border border-gray-300 shadow">Annuler</button>
+          <button type="reset" class="w-1/3 text-gray-900 bg-gray-100 hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center border border-gray-300 shadow">Réinitialiser</button>
+          <button type="submit" [disabled]="!isArticleFormValid()" class="w-2/3 text-white bg-violet-700 hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center shadow transition-colors duration-200">{{ editMode ? 'Mettre à jour' : 'Ajouter à la liste' }}</button>
+      </div>
+    </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de mise à jour -->
+<div *ngIf="showUpdateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+  <div class="w-full max-w-3xl mx-auto my-8 flex flex-col bg-white dark:bg-gray-900/90 dark:backdrop-blur-md border border-gray-200 dark:border-gray-600 rounded-2xl shadow-2xl relative animate-fade-in max-h-[90vh]">
+    <div class="sticky top-0 z-10 bg-white dark:bg-gray-900 rounded-t-2xl shadow-sm px-6 pt-6 pb-4 flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center w-full">Mettre à jour l'entrée</h2>
+      <button (click)="closeUpdateModal()" class="absolute top-6 right-6 text-gray-400 hover:text-violet-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="overflow-y-auto px-6 pb-6 pt-2" style="max-height:70vh;">
+      <form class="space-y-5" #updateForm="ngForm" (ngSubmit)="saveUpdatePiece()" (reset)="closeUpdateModal()" autocomplete="off">
+        <div class="flex gap-2">
+          <div class="w-1/2">
+            <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Pièce N°</label>
+            <input type="text" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="updatePiece.numero_piece" name="numero_piece" required [ngClass]="{'border-red-500': showCreateError && !updatePiece.numero_piece}" placeholder="Facture N°" />
+            <div *ngIf="showCreateError && !updatePiece.numero_piece" class="text-xs text-red-500">Numéro requis.</div>
+          </div>
+          <div class="w-1/2">
+            <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Date du pièce</label>
+            <input type="date" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="updatePiece.date_piece" name="date_piece" required [ngClass]="{'border-red-500': showCreateError && !updatePiece.date_piece}" />
+            <div *ngIf="showCreateError && !updatePiece.date_piece" class="text-xs text-red-500">Date requise.</div>
+          </div>
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Marché</label>
+          <input type="text" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="updatePiece.marche" name="marche" required [ngClass]="{'border-red-500': showCreateError && !updatePiece.marche}" placeholder="Marché" />
+          <div *ngIf="showCreateError && !updatePiece.marche" class="text-xs text-red-500">Marché requis.</div>
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Catégorie d'Article</label>
+          <select class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="updatePiece.categorie_article" name="categorie_article" required [ngClass]="{'border-red-500': showCreateError && !updatePiece.categorie_article}">
+            <option value="">Choisir catégorie...</option>
+            <option value="6215">Entretien et reparation des materiels et mobiliers (6215)</option>
+            <option value="6111">Fournitures et articles de bureau (6111)</option>
+            <option value="6225">Frais de colloques, seminaires, conferences (6225)</option>
+            <option value="6261">Frais postaux (6261)</option>
+            <option value="6117">Habillement (6117)</option>
+            <option value="6224">Impression, reliures, insertions, publicite et promotion (6224)</option>
+            <option value="6112">Imprimes, cachets et documents administratifs (6112)</option>
+            <option value="2457">Installations, agencements et amenagements ? Reseaux (2457)</option>
+            <option value="6116">Instruments specialises (6116)</option>
+            <option value="6216">Maintenance des materiels informatiques, électriques, électroniques et téléphoniques (6216)</option>
+            <option value="6217">Maintenance des réseaux, logiciels et systèmes informatiques (6217)</option>
+            <option value="2464">Materiels et mobiliers de bureau (2464)</option>
+            <option value="2463">Matériels informatiques, électriques, électroniques et téléphoniques (2463)</option>
+            <option value="2461">Materiels techniques (2461)</option>
+            <option value="6115">Petits outillages et fournitures d'atelier (6115)</option>
+            <option value="6125">Produits alimentaires (6125)</option>
+            <option value="6114">Produits, petits materiels et menues depenses d'entretien (6114)</option>
+            <option value="6123">Produits pharmaceutiques (6123)</option>
+            <option value="6263">Redevances telephoniques mobiles (6263)</option>
+            <option value="2472">Véhicules terrestres (2472)</option>
+            <option value="2468">Autres materiels et outillages (2468)</option>
+            <option value="6113">Consomptibles informatiques (6113)</option>
+            <option value="6223">Documentation et abonnement (6223)</option>
+            <option value="6211">Entretien de batiments (6211)</option>
+            <option value="6213">Entretien de matériels de transports (6213)</option>
+          </select>
+          <div *ngIf="showCreateError && !updatePiece.categorie_article" class="text-xs text-red-500">Catégorie requise.</div>
+        </div>
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="flex-1">
+            <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Compte</label>
+            <select class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="updatePiece.compte" name="compte" required>
+              <option value="DSP">DSP</option>
+            </select>
+          </div>
+          <div class="flex-1">
+            <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Téléphone</label>
+            <div class="flex">
+              <span class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-600">+261</span>
+              <input type="tel" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-r-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="updatePiece.telephone" name="telephone" placeholder="Numéro de téléphone" pattern="[0-9]{9}" [ngClass]="{'border-red-500': showCreateError && !updatePiece.telephone}" required style="border-top-left-radius: 0; border-bottom-left-radius: 0;" />
+            </div>
+            <div *ngIf="showCreateError && !updatePiece.telephone" class="text-xs text-red-500">Téléphone requis (9 chiffres).</div>
+          </div>
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Est-ce que tous les articles sont livrés ?</label>
+          <div class="flex gap-6 mt-1">
+            <label class="inline-flex items-center cursor-pointer">
+              <input type="radio" class="form-radio text-violet-600" [(ngModel)]="updatePiece.tous_livres" name="tous_livres" value="oui" required />
+              <span class="ml-2 dark:text-white">Oui</span>
+            </label>
+            <label class="inline-flex items-center cursor-pointer">
+              <input type="radio" class="form-radio text-violet-600" [(ngModel)]="updatePiece.tous_livres" name="tous_livres" value="non" required />
+              <span class="ml-2 dark:text-white">Non</span>
+            </label>
+          </div>
+          <div *ngIf="showCreateError && !updatePiece.tous_livres" class="text-xs text-red-500">Réponse requise.</div>
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Commentaire</label>
+          <textarea class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [(ngModel)]="updatePiece.commentaire" name="commentaire" placeholder="Commentaire"></textarea>
+        </div>
+        <div class="flex justify-end mt-6 gap-4">
+          <button *ngIf="editMode" type="button" (click)="editMode = false; editIndex = -1; articleFormData = {designation:'',unite:'',prix_unitaire:'',quantite:'',date_peremption:''}; selectedArticle=''; selectedUnite=''; articleFormSubmitted=false;" class="w-1/3 text-gray-900 bg-gray-100 hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center border border-gray-300 shadow">Annuler</button>
+          <button type="reset" class="w-1/3 text-gray-900 bg-gray-100 hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center border border-gray-300 shadow">Réinitialiser</button>
+          <button type="submit" class="w-2/3 text-white bg-violet-700 hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center shadow transition-colors duration-200">Mettre à jour</button>
+      </div>
+    </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal CRUD Article (design avancé violet-bleu-rose) -->
+<div *ngIf="showArticleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white dark:bg-gray-900/90 dark:backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-0 min-w-[400px] max-w-3xl w-full relative animate-fade-in">
+    <div class="rounded-t-2xl px-6 pt-6 pb-4 bg-white dark:bg-gray-900 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center w-full">Saisie article</h2>
+      <button (click)="closeArticleModal()" class="absolute right-6 top-6 text-gray-400 hover:text-violet-600 transition text-2xl font-bold"><span aria-label="Fermer">&times;</span></button>
+    </div>
+    <form #articleForm="ngForm" #articleFormTop (ngSubmit)="editMode && editIndex >= 0 ? saveArticleEdit() : addArticleToLocalList()" (reset)="articleForm.resetForm(); selectedArticle=''; selectedUnite=''; articleFormData={designation:'',unite:'',prix_unitaire:'',quantite:'',date_peremption:''}; articleFormSubmitted=false;" autocomplete="off" class="px-6 pb-6 pt-2 space-y-5 overflow-y-auto" style="max-height:70vh;">
+      <div class="flex gap-2">
+        <div class="w-1/2">
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Article</label>
+          <select class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500"
+            [(ngModel)]="selectedArticle" (change)="onArticleChange()" name="designation" required
+            [ngClass]="{'border-red-500': articleFormSubmitted && !selectedArticle}">
+            <option value="">Sélectionner un article...</option>
+            <option *ngFor="let art of articleOptions" [value]="art">{{ art }}</option>
+          </select>
+          <div *ngIf="articleFormSubmitted && !selectedArticle" class="text-xs text-red-500 mt-1">Article requis.</div>
+        </div>
+        <div class="w-1/2">
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Unité</label>
+          <input type="text" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500" [value]="selectedUnite" name="unite" readonly />
+        </div>
+        </div>
+      <div class="flex gap-2">
+        <div class="w-1/2">
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Prix unitaire</label>
+          <input type="number" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500"
+            [(ngModel)]="articleFormData.prix_unitaire" name="prix_unitaire" required placeholder="Saisir prix unitaire"
+            [ngClass]="{'border-red-500': articleFormSubmitted && !articleFormData.prix_unitaire}" />
+          <div *ngIf="articleFormSubmitted && !articleFormData.prix_unitaire" class="text-xs text-red-500 mt-1">Prix unitaire requis.</div>
+        </div>
+        <div class="w-1/2">
+          <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Quantité</label>
+          <input type="number" min="1" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500"
+            [(ngModel)]="articleFormData.quantite" name="quantite" required placeholder="Saisir quantité"
+            [ngClass]="{'border-red-500': articleFormSubmitted && !articleFormData.quantite}" />
+          <div *ngIf="articleFormSubmitted && !articleFormData.quantite" class="text-xs text-red-500 mt-1">Quantité requise.</div>
+        </div>
+      </div>
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-200">Date de péremption</label>
+        <input type="date" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-violet-500 dark:focus:border-violet-500"
+          [(ngModel)]="articleFormData.date_peremption" name="date_peremption"
+          [ngClass]="{'border-red-500': articleFormSubmitted && !articleFormData.date_peremption}" />
+        <div *ngIf="articleFormSubmitted && !articleFormData.date_peremption" class="text-xs text-red-500 mt-1">Date de péremption requise.</div>
+      </div>
+      <div class="flex justify-end mt-6 gap-4">
+        <button *ngIf="editMode" type="button" (click)="editMode = false; editIndex = -1; articleFormData = {designation:'',unite:'',prix_unitaire:'',quantite:'',date_peremption:''}; selectedArticle=''; selectedUnite=''; articleFormSubmitted=false;" class="w-1/3 text-gray-900 bg-gray-100 hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center border border-gray-300 shadow">Annuler</button>
+        <button type="reset" class="w-1/3 text-gray-700 bg-gray-200 hover:bg-gray-300 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center border border-gray-300 shadow">Réinitialiser</button>
+        <button type="submit" [disabled]="!isArticleFormValid()" class="w-2/3 text-white bg-violet-700 hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center shadow transition-colors duration-200">{{ editMode && editIndex >= 0 ? 'Modifier l\'article' : (editMode ? 'Mettre à jour' : 'Ajouter à la liste') }}</button>
+      </div>
+      <div class="mt-8 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+        <table *ngIf="localArticleList.length > 0" class="min-w-full text-xs bg-white dark:bg-gray-900">
+          <thead class="bg-gray-50 dark:bg-gray-800 text-xs text-left text-gray-700 uppercase dark:text-gray-400 font-sans">
+            <tr>
+              <th class="px-4 py-3 font-sans font-bold">Désignation</th>
+              <th class="px-4 py-3 font-sans font-bold">Unité</th>
+              <th class="px-4 py-3 font-sans font-bold">Prix unitaire</th>
+              <th class="px-4 py-3 font-sans font-bold">Quantité</th>
+              <th class="px-4 py-3 font-sans font-bold">Date de péremption</th>
+              <th class="px-4 py-3 font-sans font-bold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let art of localArticleList; let i = index" class="even:bg-gray-50 dark:even:bg-gray-900/20 hover:bg-violet-100/60 dark:hover:bg-violet-900/40 transition">
+              <td class="px-4 py-2 text-gray-700 dark:text-violet-100 whitespace-nowrap">{{ art.designation }}</td>
+              <td class="px-4 py-2 text-gray-700 dark:text-violet-100 whitespace-nowrap">{{ art.unite }}</td>
+              <td class="px-4 py-2 text-gray-700 dark:text-violet-100 whitespace-nowrap">{{ art.prix_unitaire }}</td>
+              <td class="px-4 py-2 text-gray-700 dark:text-violet-100 whitespace-nowrap">{{ art.quantite }}</td>
+              <td class="px-4 py-2 text-gray-700 dark:text-violet-100 whitespace-nowrap">{{ art.date_peremption | date:'shortDate' }}</td>
+              <td class="px-4 py-2 flex gap-2 whitespace-nowrap">
+                <button type="button" (click)="$event.preventDefault(); editLocalArticle(i)" class="p-1 rounded hover:bg-violet-100 dark:hover:bg-violet-800 transition" title="Modifier">
+                  <svg class="w-5 h-5 text-violet-600 dark:text-violet-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20h9"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19.5 3 21l1.5-4L16.5 3.5z"/></svg>
+                </button>
+                <button type="button" (click)="$event.preventDefault(); deleteLocalArticle(i)" class="p-1 rounded hover:bg-violet-100 dark:hover:bg-violet-800 transition" title="Supprimer">
+                  <svg class="w-5 h-5 text-pink-500 dark:text-pink-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex justify-end mt-6 gap-4">
+        <button *ngIf="localArticleList.length > 0" (click)="closeArticleModal()" type="button" class="w-1/3 text-red-700 bg-gray-100 hover:bg-red-100 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm shadow px-5 py-2.5 text-center border border-gray-300">Rejeter</button>
+        <button *ngIf="localArticleList.length > 0" (click)="validateAllArticles()" class="w-2/3 text-white bg-violet-700 hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm shadow-sm transition-colors duration-200">Valider tous les articles</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+

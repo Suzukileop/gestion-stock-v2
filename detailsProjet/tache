@@ -1,0 +1,100 @@
+Voici une **liste claire et ordonnée des tâches** pour structurer l’architecture de ton application autour du rôle **responsable** (en mock data/localStorage), en suivant les besoins du projet :
+
+---
+
+## **1. Structure et gestion des utilisateurs**
+- [x] CRUD utilisateurs (admin)
+- [x] Validation des comptes clients (admin)
+- [x] Création manuelle de responsables (admin)
+- [ ] Création d’un responsable par défaut (mock) avec identifiants fournis ci-dessous
+- [ ] Page de profil (consultation/modification de ses infos)
+
+---
+
+## **2. Menus et navigation par rôle**
+- [ ] Menu latéral ou barre de navigation dynamique selon le rôle connecté
+- [ ] Protection des routes (accès uniquement aux pages autorisées selon le rôle)
+- [ ] Déconnexion
+
+---
+
+## **3. Tableau de bord (responsable)**
+- [ ] Page d’accueil “Tableau de bord” avec indicateurs clés (commandes à valider, alertes stock, etc.)
+
+---
+
+## **4. Gestion des utilisateurs (pour responsable/admin)**
+- [ ] Accès à la liste des utilisateurs (lecture seule ou CRUD selon le rôle)
+- [ ] Filtres par rôle/statut
+
+---
+
+## **5. Gestion du stock**
+- [ ] Page “Entrées en stock” (création, validation, historique)
+- [ ] Page “Sorties/Livraisons” (gestion des livraisons, historique)
+- [ ] Page “Inventaire du jour” (vue synthétique du stock, alertes seuils)
+
+---
+
+## **6. Gestion des articles**
+- [ ] CRUD articles (ajout, modification, suppression, liste)
+- [ ] CRUD catégories d’articles
+
+---
+
+## **7. Expression de besoins**
+- [ ] Page “Expression de besoins” (création, envoi, suivi)
+- [ ] Validation des expressions de besoins (si besoin)
+
+---
+
+## **8. Autres modules liés à la responsabilité**
+- [ ] Gestion des affectations de matériel
+- [ ] Historique des mouvements de stock
+- [ ] Rapports/statistiques (exports, synthèses)
+
+---
+
+## **9. Expérience utilisateur**
+- [ ] Notifications (validation, rejet, alertes)
+- [ ] Feedback visuel (modals, toasts)
+- [ ] Responsive/mobile friendly
+
+---
+
+### **Identifiants du responsable (mock par défaut)**
+
+À ajouter dans le localStorage (ou à créer automatiquement au chargement si absent) :
+
+```json
+{
+  "matricule": "resp01",
+  "nom": "Rakoto",
+  "prenom": "Responsable",
+  "email": "responsable@minef.com",
+  "telephone": "+261340000001",
+  "password": "Resp@1234",
+  "unite_administrative": "DIRECTION DU PATRIMOINE DE L ETAT",
+  "role": "RESPONSABLE",
+  "statut": "ACTIVE"
+}
+```
+
+- **Matricule** : resp01
+- **Email** : responsable@minef.com
+- **Mot de passe** : Resp@1234
+
+---
+
+## **Résumé des étapes à suivre**
+
+1. **Créer le responsable mock par défaut** (si absent)
+2. **Mettre en place la navigation/menu dynamique selon le rôle**
+3. **Créer la page “Tableau de bord” du responsable**
+4. **Développer chaque module métier (stock, articles, besoins, etc.) en mockdata**
+5. **Ajouter la gestion des notifications et l’UX**
+
+---
+
+**Veux-tu que je commence par l’ajout automatique du responsable mock et la structure du menu/navigation dynamique ?**  
+Ou veux-tu prioriser un module métier en particulier ?

@@ -1,0 +1,12 @@
+/* You can add global styles to this file, and also import other style files */
+@import 'flowbite/dist/flowbite.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body { height: 100%; }
+body {
+  @apply font-sans text-base text-gray-900 bg-gray-50;
+  margin: 0;
+}

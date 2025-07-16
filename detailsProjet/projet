@@ -1,0 +1,631 @@
+Nous allons concevoir une application de gestion de stock (GS) pour le Ministère de l'Économie et des Finances. L'application doit permettre la gestion des stocks et le suivi du matériel. Elle aura plusieurs types de comptes : Client, Responsable, admin.
+
+## Analyse des besoins
+
+L'application doit offrir les fonctionnalités suivantes :
+
+1. **Gestion des utilisateurs** : authentification, inscription, réinitialisation de mot de passe.
+
+2. **Compte Client** :
+
+- Passer une commande d'articles.
+
+- Suivre l'état de ses commandes.
+
+- Saisir une expression de besoin (liste de besoins en matériel).
+
+3. **Compte responsable** :
+
+- Gérer les entrées en stock (création de pièces d'entrée, saisie des articles entrants).
+
+- Gérer les expressions de besoin (modification de la période de saisie, export Excel).
+
+- Effectuer l'inventaire du jour.
+
+- Gérer les livraisons (livrer les commandes).
+
+- Affecter les matériels (par demande ou par dispatch).
+
+- Consulter l'historique (livraisons, matériels).
+
+- Valider les ordres d'entrée en stock (factures).
+
+- Valider les commandes.
+
+- Consulter l'inventaire du jour.
+
+4. **Compte daff** :
+
+
+
+## Conception de la base de données
+
+Nous allons définir les modèles (tables) nécessaires.
+
+### 1. Modèle `User` (Utilisateur)
+
+- **id**: clé primaire.
+
+- **matricule**: identifiant unique (pour réinitialisation de mot de passe).
+
+- **nom**: string.
+
+- **prenom**: string.
+
+- **email**: string (unique).
+
+- **telephone**: string.
+
+- **password**: hash du mot de passe.
+
+- **role**: enum (CLIENT, RESPONSABLE, ADMIN).
+
+- **unite_administrative**: référence à l'unité administrative (peut être une clé étrangère vers une table `UniteAdministrative`).
+
+### 2. Modèle `UniteAdministrative` (Unité Administrative)
+
+- **id**: clé primaire.
+
+- **nom**: string.
+
+- **code**: string (unique).
+
+### 3. Modèle `Article`
+
+- **id**: clé primaire.
+
+- **designation**: string.
+
+- **categorie_id**: clé étrangère vers `CategorieArticle`.
+
+- **unite**: string (unité de mesure: pièce, mètre, etc.).
+
+- **seuil_commande**: integer (seuil pour déclencher une commande).
+
+- **prix_unitaire**: decimal.
+
+### 4. Modèle `CategorieArticle`
+
+- **id**: clé primaire.
+
+- **nom**: string.
+
+### 5. Modèle `Commande`
+
+- **id**: clé primaire.
+
+- **client_id**: clé étrangère vers `User` (le client qui a passé la commande).
+
+- **date_commande**: datetime.
+
+- **statut**: enum (ENVOYEE, VALIDEE, REJETEE, LIVREE).
+
+- **motif**: text (raison de la commande).
+
+### 6. Modèle `LigneCommande`
+
+- **id**: clé primaire.
+
+- **commande_id**: clé étrangère vers `Commande`.
+
+- **article_id**: clé étrangère vers `Article`.
+
+- **quantite**: integer.
+
+### 7. Modèle `ExpressionBesoin`
+
+- **id**: clé primaire.
+
+- **client_id**: clé étrangère vers `User`.
+
+- **date_saisie**: datetime.
+
+- **date_debut**: date (début de la période de besoin).
+
+- **date_fin**: date (fin de la période de besoin).
+
+- **statut**: enum (BROUILLON, ENVOYEE, VALIDEE).
+
+### 8. Modèle `LigneExpressionBesoin`
+
+- **id**: clé primaire.
+
+- **expression_besoin_id**: clé étrangère vers `ExpressionBesoin`.
+
+- **article_id**: clé étrangère vers `Article`.
+
+- **quantite**: integer.
+
+- **motif**: text.
+
+### 9. Modèle `EntreeStock`
+
+- **id**: clé primaire.
+
+- **responsable_depose_id**: clé étrangère vers `User` (le responsable qui a créé l'entrée).
+
+- **numero_piece**: string (numéro de pièce d'entrée).
+
+- **date_entree**: datetime.
+
+- **marchandise**: string (information sur la marchandise).
+
+- **statut**: enum (BROUILLON, VALIDEE, REJETEE).
+
+- **Responsabe_valide_id**: clé étrangère vers `User` (le responsable qui valide , si validée).
+
+- **facture_image`: string (chemin vers l'image de la facture).
+
+### 10. Modèle `LigneEntreeStock`
+
+- **id**: clé primaire.
+
+- **entree_stock_id**: clé étrangère vers `EntreeStock`.
+
+- **article_id**: clé étrangère vers `Article`.
+
+- **quantite**: integer.
+
+- **prix_unitaire**: decimal.
+
+- **magasin**: string (lieu de stockage).
+
+- **etagere**: string.
+
+### 11. Modèle `Livraison`
+
+- **id**: clé primaire.
+
+- **commande_id**: clé étrangère vers `Commande` (la commande livrée).
+
+- **date_livraison**: datetime.
+
+- **responsable_id**: clé étrangère vers `User` (responsable qui a fait la livraison).
+
+### 12. Modèle `LigneLivraison`
+
+- **id**: clé primaire.
+
+- **livraison_id**: clé étrangère vers `Livraison`.
+
+- **article_id**: clé étrangère vers `Article`.
+
+- **quantite**: integer.
+
+### 13. Modèle `Affectation`
+
+- **id**: clé primaire.
+
+- **type_detenteur**: enum (INDIVIDU, SERVICE, etc.).
+
+- **designation_article**: string (peut être redondant avec Article, mais permet de garder une trace).
+
+- **reference_article**: string (référence de l'article).
+
+- **matricule_detenteur**: string.
+
+- **nom_detenteur**: string.
+
+- **prenom_detenteur**: string.
+
+- **unite_administrative_id**: clé étrangère vers `UniteAdministrative`.
+
+- **provenance**: string.
+
+- **etat_objet**: enum (NEUF, BON, MAUVAIS, HORS_SERVICE).
+
+- **prix**: decimal.
+
+- **observation**: text.
+
+- **date_affectation**: datetime.
+
+- **livraison_id**: clé étrangère vers `Livraison` (optionnel, si l'affectation est liée à une livraison).
+
+- **article_id**: clé étrangère vers `Article`.
+
+### 14. Modèle `Inventaire`
+
+- **id**: clé primaire.
+
+- **article_id**: clé étrangère vers `Article`.
+
+- **quantite_disponible**: integer.
+
+- **date_inventaire**: date.
+
+- **seuil_commande**: integer (copie du seuil de l'article, mais peut être modifié à la date de l'inventaire).
+
+### 15. Modèle `MouvementStock`
+
+- **id**: clé primaire.
+
+- **article_id**: clé étrangère vers `Article`.
+
+- **type_mouvement**: enum (ENTREE, SORTIE).
+
+- **quantite**: integer.
+
+- **date_mouvement**: datetime.
+
+- **entree_stock_id**: clé étrangère vers `EntreeStock` (si entrée).
+
+- **livraison_id**: clé étrangère vers `Livraison` (si sortie).
+
+## Logique de l'application
+
+### Authentification et gestion des comptes
+
+- Les utilisateurs s'authentifient avec leur matricule (ou email) et mot de passe.
+
+- L'inscription nécessite une validation (par un administrateur?) car le guide mentionne "envoyer votre demande d'inscription".
+
+- La réinitialisation du mot de passe se fait en fournissant le matricule et le numéro de téléphone (doit correspondre à celui du compte).
+
+### Compte Client
+
+1. **Passer une commande**:
+
+- Le client sélectionne un ou plusieurs articles, saisit les quantités et un motif.
+
+- La commande est créée avec le statut "ENVOYEE".
+
+2. **Suivi de commande**:
+
+- Le client peut filtrer ses commandes par statut et par période.
+
+3. **Expression de besoin**:
+
+- Le client saisit une liste d'articles dont il a besoin pour une période donnée.
+
+- Il peut l'envoyer pour validation.
+
+### Compte responsable
+
+1. **Entrée en stock**:
+
+- Le responsable crée une pièce d'entrée (par exemple, pour une facture reçue).
+
+- Il saisit les articles entrants avec leurs détails (prix, magasin, étagère).
+
+- La pièce d'entrée doit être validée par un responsable .
+
+2. **Expression de besoin**:
+
+- Le responsable peut modifier la période de saisie des expressions de besoin et les exporter en Excel.
+
+3. **Inventaire du jour**:
+
+- Affiche pour chaque article la quantité disponible et le seuil de commande.
+
+- Permet de voir les détails des entrées et sorties.
+
+4. **Livraison**:
+
+- Le responsable voit la liste des commandes validées à livrer.
+
+- Il peut livrer un article à la fois ou toute la commande.
+
+- Lors de la livraison, les quantités en stock sont décrémentées.
+
+5. **Affectation**:
+
+- **Par demande**: Après livraison, le responsable affecte chaque article à un détenteur (individu ou service). Il saisit les informations du détenteur.
+
+- **Par dispatch**: Permet d'affecter un article sans passer par une commande (par exemple, pour un transfert interne).
+
+6. **Historique et suivi**:
+
+- **Livraison**: Historique des livraisons avec filtres par compte et période.
+
+- **Matériel**: Suivi des matériels par désignation et référence.
+
+1. **Validation d'ordre d'entrée**:
+
+- Le responsable voit la liste des pièces d'entrée en attente de validation.
+
+- Il peut valider ou rejeter une entrée. En cas de validation, les articles sont ajoutés au stock.
+
+- Il peut voir l'image de la facture.
+
+2. **Validation de commande**:
+
+- Le responsable voit la liste des commandes envoyées par les clients.
+
+- Il peut valider, rejeter ou modifier une commande.
+
+3. **Inventaire du jour**:
+
+- Même vue que pour le responsable, mais sans possibilité de modifier le seuil? (Le guide ne précise pas, mais on peut supposer que seul le responsable modifie le seuil).
+
+
+### Compte ADMIN
+TOUS 
+
+
+## Workflows importants
+
+### Workflow d'une commande
+
+1. Le client passe une commande → statut "ENVOYEE".
+
+2. Le responsable valide la commande → statut "VALIDEE" (ou rejette → "REJETEE").
+
+3. Le responsable voit la commande validée dans la liste des livraisons.
+
+4. Le responsable livre les articles → statut de la commande passe à "LIVREE".
+
+5. Le responsable affecte les articles livrés à des détenteurs.
+
+### Workflow d'une entrée en stock
+
+1. Le responsable crée une pièce d'entrée (avec les articles) → statut "BROUILLON".
+
+2. Le responsable soumet la pièce pour validation → statut "EN_ATTENTE_VALIDATION".
+
+3. Le responsable valide la pièce → statut "VALIDEE" (les articles sont ajoutés au stock) ou rejette → "REJETEE".
+
+### Gestion du stock
+
+- À chaque entrée (validation d'une pièce d'entrée), on crée un mouvement d'entrée pour chaque article, ce qui augmente la quantité disponible.
+
+- À chaque livraison, on crée un mouvement de sortie pour chaque article, ce qui diminue la quantité disponible.
+
+- L'inventaire du jour reflète la quantité disponible à la date du jour.
+
+## Interface utilisateur
+
+L'application aura une interface web avec les pages décrites dans le guide (tableau de bord, menus, sous-menus). Nous ne détaillons pas ici l'UI, mais suivons le guide.
+
+## Conclusion
+
+Cette conception couvre les fonctionnalités décrites dans le guide d'utilisation. La base de données est normalisée et les workflows sont clairs. L'application sera développée avec une architecture web classique (frontend, backend, base de données).
+
+Note: Certains champs dans le guide (comme "Mathoule" dans l'inscription) semblent être des erreurs. Nous avons supposé que "Mathoule" est "Matricule". De même, certaines pages ont du texte corrompu, nous avons interprété au mieux.
+Conception Complète de l'Application "Gestion de Stock" (GS)
+Architecture Globale
+
+Type d'application : Web (responsive)
+Backend : API RESTful
+Frontend : Interface intuitive avec tableau de bord dynamique
+Modules clés :
+
+    Authentification multi-rôles (Client, responsable, responsable)
+
+    Gestion des stocks (entrées/sorties)
+
+    Suivi des commandes et matériels
+
+    Workflows de validation
+
+    Reporting (export Excel, historiques)
+
+Modèles de Données (Schéma de Base de Données)
+1. Utilisateur (User)
+Champ	Type	Description
+id	PK (UUID)	Identifiant unique
+matricule	String (UNIQ)	Identifiant de connexion
+nom	String	
+prenom	String	
+email	String (UNIQ)	
+telephone	String	
+password_hash	String	Chiffré (bcrypt)
+role	Enum	client, responsable, admin
+unite_admin_id	FK (Unite)	Unité administrative rattachée
+reset_token	String	Pour réinitialisation mot de passe
+2. Unité Administrative (UniteAdmin)
+Champ	Type	Description
+id	PK (UUID)	
+code	String	Code unique (ex: "DGRF")
+nom	String	
+3. Article (Article)
+Champ	Type	Description
+id	PK (UUID)	
+designation	String (UNIQ)	(ex: "Adapteur USB 3.0 LAN")
+categorie_id	FK (Categorie)	
+unite_mesure	String	(ex: "pièce", "unité")
+seuil_commande	Integer	Seuil d'alerte pour réapprovisionnement
+4. Catégorie d'Article (CategorieArticle)
+Champ	Type	Description
+id	PK (UUID)	
+nom	String	(ex: "Consommables IT")
+5. Commande (Commande)
+Champ	Type	Description
+id	PK (UUID)	
+client_id	FK (User)	
+date_creation	DateTime	
+statut	Enum	envoyée, validée, rejetée, livrée
+motif	Text	
+6. Ligne de Commande (LigneCommande)
+Champ	Type	Description
+id	PK (UUID)	
+commande_id	FK (Commande)	
+article_id	FK (Article)	
+quantite	Integer	
+7. Entrée en Stock (EntreeStock)
+Champ	Type	Description
+id	PK (UUID)	
+depositaire_id	FK (User)	
+numero_piece	String (UNIQ)	(ex: "ENT-2023-001")
+date_entree	DateTime	
+responsable_id	FK (User)	Si validée
+statut	Enum	brouillon, validée, rejetée
+8. Ligne d'Entrée (LigneEntree)
+Champ	Type	Description
+id	PK (UUID)	
+entree_id	FK (EntreeStock)	
+article_id	FK (Article)	
+quantite	Integer	
+prix_unitaire	Decimal	
+magasin	String	Lieu de stockage
+etagere	String	
+9. Livraison (Livraison)
+Champ	Type	Description
+id	PK (UUID)	
+commande_id	FK (Commande)	
+depositaire_id	FK (User)	
+date_livraison	DateTime	
+10. Affectation (Affectation)
+Champ	Type	Description
+id	PK (UUID)	
+type_detenteur	Enum	individu, service, entite
+article_id	FK (Article)	
+matricule	String	
+nom	String	
+prenom	String	
+unite_admin_id	FK (UniteAdmin)	
+provenance	String	
+etat_objet	Enum	neuf, bon, mauvais
+11. Expression de Besoin (ExpressionBesoin)
+Champ	Type	Description
+id	PK (UUID)	
+client_id	FK (User)	
+date_debut	Date	Période couverte
+date_fin	Date	
+date_saisie	DateTime	
+Logique Métier Détaillee
+A. Authentification
+
+    Inscription :
+
+        Saisie des infos personnelles + sélection de l'unité administrative.
+
+        Envoi d'une demande à valider par l'administrateur.
+
+    Réinitialisation mot de passe :
+
+        Vérification du matricule et téléphone.
+
+        Envoi d'un lien temporaire par email.
+
+B. Workflow Client
+
+    Passer une commande :
+
+        Sélection d'articles → ajout au panier → validation.
+
+        Statut initial : envoyée.
+
+    Suivi de commande :
+
+        Filtrage par statut/dates.
+
+        Visualisation du détail (articles, quantités, motif).
+
+    Expression de besoin :
+
+        Saisie des besoins futurs (période spécifique).
+
+        Export Excel possible.
+
+C. Workflow responsable
+
+    Entrée en stock :
+
+        Création d'une pièce d'entrée (n° unique).
+
+        Saisie des articles reçus (prix, lieu de stockage).
+
+        Soumission pour validation.
+
+    Livraison :
+
+        Liste des commandes validées à livrer.
+
+        Option "Livrer tout" ou article par article.
+
+    Affectation :
+
+        Par demande : Lier un détenteur à un article livré.
+
+        Par dispatch : Affectation directe sans livraison.
+
+    Inventaire :
+
+        Vue temps réel des stocks (quantité vs seuil).
+
+        Détail des entrées/sorties.
+
+D. Workflow responsable
+
+    Validation entrée stock :
+
+        Vérification des pièces d'entrée (facture jointe).
+
+        Choix : Valider/Rejeter/Voir photo.
+
+    Validation commande :
+
+        Consultation des demandes clients.
+
+        Validation/rejet avec motif si besoin.
+
+    Inventaire :
+
+        Vue identique au responsable + export des données.
+
+Règles Métier Clés
+
+    Sécurité :
+
+        Mot de passe chiffré + tokens JWT.
+
+        Restrictions par rôle (ex: un client ne voit pas les entrées stock).
+
+    Contrôle des stocks :
+
+        Alerte automatique si stock < seuil.
+
+        Blocage des livraisons si stock insuffisant.
+
+    Traçabilité :
+
+        Historique complet des mouvements (qui, quand, quoi).
+
+        Numérotation unique des pièces d'entrée.
+
+    Workflows :
+
+        Une commande doit être validée avant livraison.
+
+        Une entrée stock doit être validée pour être comptabilisée.
+
+Schéma Relationnel Simplifié
+
+User ──┐             ExpressionBesoin ──┐
+        ├─ Commande ── LigneCommande     │
+        │            └─ Livraison        │
+        │                                │
+        ├─ EntreeStock ── LigneEntree    │
+        │                                │
+        └─ Affectation                   │
+                                         │
+Article ───────────────┬─────────────────┘
+                       │
+CategorieArticle ──────┘
+
+Fonctionnalités Avancées
+
+    Tableaux de bord personnalisés :
+
+        Client : Suivi commandes (envoyées/validées/livrées).
+
+        responsable : Top articles + indicateurs d'activité.
+
+    Export de données :
+
+        Historiques (Excel).
+
+        Expressions de besoin (Excel).
+
+    Notifications :
+
+        Client : Changement de statut de commande.
+
+        responsable : Nouvelles demandes en attente.
+
+Workflow Typique
+Diagram
+Code
+
+Cette conception couvre l'ensemble des besoins décrits dans le guide, garantissant traçabilité, sécurité et efficacité des processus métier.

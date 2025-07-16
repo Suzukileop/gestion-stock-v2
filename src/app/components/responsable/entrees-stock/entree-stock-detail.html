@@ -1,0 +1,46 @@
+<app-header></app-header>
+<div class="flex gap-6 pt-24 px-2 min-h-screen mx-auto" style="max-width: 100rem;">
+  <aside class="h-[calc(100vh-6rem)] sticky top-24 w-72">
+    <sidebar-responsable></sidebar-responsable>
+  </aside>
+  <main class="flex-1 h-[calc(100vh-6rem)] overflow-y-auto bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 rounded-2xl shadow-xl p-8">
+    <div class="max-w-3xl mx-auto px-4 py-8">
+      <button (click)="goBack()" class="mb-6 flex items-center gap-2 text-violet-600 hover:underline font-semibold">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        Retour
+      </button>
+      <div *ngIf="notFound" class="text-center text-red-500 font-bold py-12">
+        Entrée en stock introuvable.
+      </div>
+      <div *ngIf="!notFound && entree" class="bg-[rgba(24,27,40,0.85)] backdrop-blur border border-white/10 rounded-2xl shadow-2xl p-8">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold text-violet-300">Détail de l'entrée</h2>
+          <span class="px-3 py-1 rounded-full text-xs font-semibold"
+            [ngClass]="{
+              'bg-yellow-200 text-gray-900': entree.statut === 'BROUILLON',
+              'bg-green-300 text-gray-900': entree.statut === 'VALIDEE',
+              'bg-red-300 text-gray-900': entree.statut === 'REJETEE'
+            }">
+            {{ entree.statut }}
+          </span>
+        </div>
+        <div class="mb-4">
+          <div class="text-lg font-semibold text-gray-100">Numéro de pièce : <span class="font-mono">{{ entree.numero_piece }}</span></div>
+          <div class="text-gray-400">Date d'entrée : {{ entree.date_entree | date:'shortDate' }}</div>
+          <div class="text-gray-300">Marchandise : {{ entree.marchandise }}</div>
+        </div>
+        <div>
+          <h3 class="font-semibold text-violet-300 mb-2">Articles de l'entrée</h3>
+          <div *ngIf="entree.lignes && entree.lignes.length > 0; else noLignes">
+            <div *ngFor="let l of entree.lignes; let i = index" class="flex items-center gap-4 bg-violet-900/40 rounded-lg px-3 py-2 mb-2 text-gray-100">
+              <span class="flex-1">{{ l.designation }} ({{ l.quantite }}) - {{ l.prix_unitaire | number }} Ar, {{ l.magasin }}, {{ l.etagere }}</span>
+            </div>
+          </div>
+          <ng-template #noLignes>
+            <div class="text-gray-500">Aucun article pour cette entrée.</div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </main>
+</div> 

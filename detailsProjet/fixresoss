@@ -1,0 +1,70 @@
+Voici comment nous allons procéder pour **implémenter la fonctionnalité “Entrée en stock”** pour le responsable, en mock data (localStorage), en respectant l’architecture et l’UX de ton projet :
+
+---
+
+## 1. **Fonctionnalités à couvrir (MVP)**
+- **Liste des entrées en stock** (tableau, tri par date, statut, etc.)
+- **Ajout d’une nouvelle entrée** (formulaire, sélection articles, quantités, prix, magasin, étagère…)
+- **Validation/rejet d’une entrée** (changement de statut)
+- **Consultation des détails d’une entrée** (affichage des lignes/articles)
+- **Suppression d’une entrée** (optionnel)
+- **Persistance dans localStorage** (clé `entreesStock`)
+
+---
+
+## 2. **Structure de données (mock)**
+Chaque entrée en stock doit ressembler à :
+```json
+{
+  "id": "uuid",
+  "numero_piece": "ENT-2024-001",
+  "date_entree": "2024-06-10T12:00:00Z",
+  "marchandise": "Matériel informatique",
+  "statut": "BROUILLON" | "VALIDEE" | "REJETEE",
+  "responsable_depose_id": "resp01",
+  "responsable_valide_id": null,
+  "facture_image": null,
+  "lignes": [
+    {
+      "id": "uuid",
+      "article_id": "art01",
+      "designation": "Ordinateur portable",
+      "quantite": 5,
+      "prix_unitaire": 5000000,
+      "magasin": "Magasin A",
+      "etagere": "E1"
+    }
+  ]
+}
+```
+
+---
+
+## 3. **Composants à créer**
+- `entrees-stock.component.ts/html` (liste + bouton “Nouvelle entrée”)
+- `entree-stock-form.component.ts/html` (formulaire d’ajout/édition)
+- (optionnel) `entree-stock-detail.component.ts/html` (modal ou page détail)
+
+---
+
+## 4. **Routage**
+- `/responsable/entrees-stock` → liste des entrées
+- `/responsable/entrees-stock/nouvelle` → formulaire d’ajout
+- `/responsable/entrees-stock/:id` → détail/édition
+
+---
+
+## 5. **Étapes d’implémentation**
+1. **Créer le composant de liste** (affiche toutes les entrées, bouton “Nouvelle entrée”)
+2. **Créer le composant de formulaire** (ajout/modif, validation des champs)
+3. **Stocker/récupérer les entrées dans localStorage**
+4. **Mettre à jour le menu du sidebar pour router vers la page**
+5. **Soigner l’UI/UX (moderne, responsive, cohérent avec le reste)**
+
+---
+
+### **Veux-tu commencer par la page “Liste des entrées en stock” (étape 1) ?**
+Ou veux-tu que je crée d’abord la structure de données et le service localStorage ?  
+(Je recommande de commencer par la page liste, puis le formulaire d’ajout.)
+
+**Dis “oui” pour commencer la page liste, ou précise si tu veux une autre étape en premier.**

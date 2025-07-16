@@ -1,0 +1,8 @@
+@keyframes fadeInHighlight {
+  0% { background-color: #ede9fe; }
+  60% { background-color: #ede9fe; }
+  100% { background-color: transparent; }
+}
+.animate-fade-in {
+  animation: fadeInHighlight 0.4s;
+} 
