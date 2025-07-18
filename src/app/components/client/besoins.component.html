@@ -70,10 +70,10 @@
               <select [(ngModel)]="filterStatut" (ngModelChange)="onFilterChange()" class="rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 transition w-32">
                 <option value="">Tous </option>
                 <option value="BROUILLON">Brouillon</option>
-                <option value="ENVOYEE">Envoyé</option>
-                <option value="VALIDEE">Validé</option>
-                <option value="REJETEE">Rejeté</option>
-                <option value="LIVREE">Livré</option>
+                <option value="ENVOYEE">Envoyée</option>
+                <option value="EN_COURS">En cours de traiter</option>
+                <option value="VALIDEE">Validée</option>
+                <option value="REJETEE">Rejetée</option>
               </select>
             </div>
           </div>
@@ -250,7 +250,7 @@
 
 <!-- Modal Nouveau Besoin -->
 <div *ngIf="showBesoinModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-  <div class="w-full max-3xl mx-auto my-8 flex flex-col bg-white dark:bg-gray-900/90 dark:backdrop-blur-md border border-gray-200 dark:border-gray-600 rounded-2xl shadow-2xl relative animate-fade-in max-h-[90vh]">
+  <div class="w-full max-w-3xl mx-auto my-8 flex flex-col bg-white dark:bg-gray-900/90 dark:backdrop-blur-md border border-gray-200 dark:border-gray-600 rounded-2xl shadow-2xl relative animate-fade-in max-h-[90vh]">
     <div class="sticky top-0 z-10 bg-white dark:bg-gray-900 rounded-t-2xl shadow-sm px-6 pt-6 pb-4 flex items-center justify-between">
       <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center w-full">Nouveau besoin</h2>
       <button (click)="closeBesoinModal()" class="absolute top-6 right-6 text-gray-400 hover:text-fuchsia-600">

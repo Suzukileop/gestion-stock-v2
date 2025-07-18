@@ -453,7 +453,7 @@
         <div class="flex justify-end mt-6 gap-4">
           <button *ngIf="editMode" type="button" (click)="editMode = false; editIndex = -1; articleFormData = {designation:'',unite:'',prix_unitaire:'',quantite:'',date_peremption:''}; selectedArticle=''; selectedUnite=''; articleFormSubmitted=false;" class="w-1/3 text-gray-900 bg-gray-100 hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center border border-gray-300 shadow">Annuler</button>
           <button type="reset" class="w-1/3 text-gray-900 bg-gray-100 hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center border border-gray-300 shadow">Réinitialiser</button>
-          <button type="submit" [disabled]="!isArticleFormValid()" class="w-2/3 text-white bg-violet-700 hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center shadow transition-colors duration-200">{{ editMode ? 'Mettre à jour' : 'Ajouter à la liste' }}</button>
+          <button type="submit" [disabled]="!createForm.form.valid" class="w-2/3 text-white bg-violet-700 hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center shadow transition-colors duration-200">{{ editMode ? 'Mettre à jour' : 'Ajouter à la liste' }}</button>
       </div>
     </form>
     </div>

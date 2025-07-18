@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'sidebar-responsable',
@@ -18,6 +19,8 @@ export class SidebarResponsableComponent implements OnInit {
     { label: 'Livraison & Affectation', icon: 'truck', route: '/responsable/affectations' },
   ];
 
+  constructor(private router: Router) {}
+
   ngOnInit() {
     const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
     if (user && user.role === 'RESPONSABLE') {
@@ -31,7 +34,7 @@ export class SidebarResponsableComponent implements OnInit {
       localStorage.removeItem('currentUser');
       window.location.href = '/login';
     } else if (item.route) {
-      window.location.href = item.route;
+      this.router.navigateByUrl(item.route);
     }
   }
 
