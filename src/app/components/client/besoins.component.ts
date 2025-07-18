@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { HeaderComponent } from '../../shared/components/header/header.component';
 import { SidebarClientComponent } from './sidebar-client/sidebar-client.component';
 import { CATEGORIES, ARTICLES_PAR_CATEGORIE, UNITE_PAR_ARTICLE } from '../../data/articles-data';
+import { BesoinsService, Besoin } from '../../services/besoins.service';
 
 @Component({
   selector: 'app-besoins-client',
@@ -16,7 +17,7 @@ import { CATEGORIES, ARTICLES_PAR_CATEGORIE, UNITE_PAR_ARTICLE } from '../../dat
 export class BesoinsClientComponent implements OnInit {
   besoinsEnCours = 0;
   besoinsValides = 0;
-  derniersBesoins: any[] = [];
+  derniersBesoins: Besoin[] = [];
   showBesoinModal = false;
   stepBesoin: 1 | 2 = 1;
   besoinForm = { categorie: '', article: '', unite: '', quantite: '' };
@@ -38,7 +39,7 @@ export class BesoinsClientComponent implements OnInit {
   filterStatut: string = '';
   showDateRange: boolean = false;
   viewMode: 'table' | 'cards' = 'table';
-  filteredBesoins: any[] = [];
+  filteredBesoins: Besoin[] = [];
   editIndex: number | null = null;
   editAnimation: boolean = false;
   showActionsMenuBesoinId: number | null = null;
@@ -46,23 +47,16 @@ export class BesoinsClientComponent implements OnInit {
   editedBesoinId: number | null = null;
   showToast: boolean = false;
 
+  constructor(private besoinsService: BesoinsService) {}
+
   ngOnInit() {
-    this.chargerDonnees();
-    this.onFilterChange();
+    this.besoinsService.getBesoins().subscribe(besoins => {
+      this.derniersBesoins = besoins.filter(b => b.statut !== 'BROUILLON');
+      this.onFilterChange();
+    });
     if (this.besoinForm.categorie) {
       this.onCategorieChange();
     }
-  }
-
-  chargerDonnees() {
-    const besoins = JSON.parse(localStorage.getItem('besoins') || '[]');
-    const clientConnecte = JSON.parse(localStorage.getItem('user_connecte') || '{}');
-    const besoinsClient = besoins.filter((b: any) => b.client_id === clientConnecte.id);
-    besoinsClient.forEach((b: any) => b.showDetail = false);
-    this.besoinsEnCours = besoinsClient.filter((b: any) => ['ENVOYEE', 'VALIDEE'].includes(b.statut)).length;
-    this.besoinsValides = besoinsClient.filter((b: any) => b.statut === 'VALIDEE').length;
-    this.derniersBesoins = besoinsClient.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    this.onFilterChange();
   }
 
   nouveauBesoin() { this.ouvrirBesoinModal(); }
@@ -126,82 +120,18 @@ export class BesoinsClientComponent implements OnInit {
     if (!this.besoinMeta.dateDebut) { this.metaErrors.dateDebut = true; valid = false; }
     if (!this.besoinMeta.dateFin) { this.metaErrors.dateFin = true; valid = false; }
     if (!valid) return;
-    const clientConnecte = JSON.parse(localStorage.getItem('user_connecte') || '{}');
-    const besoins = JSON.parse(localStorage.getItem('besoins') || '[]');
-    if (this.isEditMode && this.editedBesoinId !== null) {
-      // Vérifier si modification réelle
-      const idx = besoins.findIndex((b: any) => b.id === this.editedBesoinId);
-      if (idx !== -1) {
-        const oldBsn = besoins[idx];
-        const sameArticles = JSON.stringify(oldBsn.articles) === JSON.stringify(this.articlesBesoin);
-        const sameCompte = oldBsn.compte === this.besoinMeta.compte;
-        const sameMotif = oldBsn.motif === this.besoinMeta.motif;
-        const sameCategorie = oldBsn.categorie === (this.articlesBesoin[0]?.categorie || '');
-        const sameDateDebut = oldBsn.dateDebut === this.besoinMeta.dateDebut;
-        const sameDateFin = oldBsn.dateFin === this.besoinMeta.dateFin;
-        if (sameArticles && sameCompte && sameMotif && sameCategorie && sameDateDebut && sameDateFin) {
-          this.closeBesoinModal();
-          setTimeout(() => {
-            this.message = "Aucune modification apportée.";
-            this.messageType = 'warning';
-            this.showToast = true;
-            setTimeout(() => {
-              this.showToast = false;
-              setTimeout(() => { this.message = null; this.messageType = null; }, 500);
-            }, 3000);
-          }, 250);
-          return;
-        }
-        // Mise à jour réelle
-        besoins[idx] = {
-          ...besoins[idx],
-          articles: [...this.articlesBesoin],
-          nombreArticles: this.articlesBesoin.length,
-          compte: this.besoinMeta.compte,
-          motif: this.besoinMeta.motif,
-          categorie: this.articlesBesoin[0]?.categorie || '',
-          dateDebut: this.besoinMeta.dateDebut,
-          dateFin: this.besoinMeta.dateFin,
-          motifRetour: oldBsn.motifRetour ?? null,
-        };
-        localStorage.setItem('besoins', JSON.stringify(besoins));
-        this.chargerDonnees();
-        this.closeBesoinModal();
-        setTimeout(() => {
-          this.message = "Besoin mis à jour avec succès !";
-          this.messageType = 'success';
-          this.showToast = true;
-          setTimeout(() => {
-            this.showToast = false;
-            setTimeout(() => { this.message = null; this.messageType = null; }, 500);
-          }, 1500);
-        }, 250);
-        return;
-      }
-    }
-    // Création normale
-    let dernierNumero = parseInt(localStorage.getItem('dernier_numero_besoin') || '0', 10);
-    dernierNumero++;
-    localStorage.setItem('dernier_numero_besoin', dernierNumero.toString());
-    const nouveauBesoin = {
-      id: Date.now(),
-      numero: dernierNumero.toString(),
-      client_id: clientConnecte.id,
-      date: new Date().toISOString(),
-      statut: 'BROUILLON',
-      articles: [...this.articlesBesoin],
-      nombreArticles: this.articlesBesoin.length,
-      compte: this.besoinMeta.compte,
+    // Création normale via le service
+    this.besoinsService.addBesoin({
       motif: this.besoinMeta.motif,
       categorie: this.articlesBesoin[0]?.categorie || '',
-      dateDebut: this.besoinMeta.dateDebut,
-      dateFin: this.besoinMeta.dateFin,
-      motifRetour: null,
-      showDetail: false
-    };
-    besoins.push(nouveauBesoin);
-    localStorage.setItem('besoins', JSON.stringify(besoins));
-    this.chargerDonnees();
+      article: this.articlesBesoin[0]?.article || '',
+      unite: this.articlesBesoin[0]?.unite || '',
+      quantite: this.articlesBesoin[0]?.quantite || 1,
+      compte: this.besoinMeta.compte,
+      statut: 'ENVOYEE',
+      dateDebut: this.besoinMeta.dateDebut ? new Date(this.besoinMeta.dateDebut) : undefined,
+      dateFin: this.besoinMeta.dateFin ? new Date(this.besoinMeta.dateFin) : undefined
+    });
     this.closeBesoinModal();
     setTimeout(() => {
       this.message = "Besoin créé avec succès !";
@@ -214,7 +144,9 @@ export class BesoinsClientComponent implements OnInit {
     }, 250);
   }
   clearMessageAfterDelay() { setTimeout(() => { this.message = null; this.messageType = null; }, 2500); }
-  toggleDetailBesoin(bsn: any) { this.derniersBesoins.forEach(b => { if (b !== bsn) b.showDetail = false; }); bsn.showDetail = !bsn.showDetail; }
+  toggleDetailBesoin(bsn: any) {
+    // bsn.showDetail = !bsn.showDetail;
+  }
   openDetailModal(bsn: any) { this.selectedBesoin = bsn; }
   closeDetailModal() { this.selectedBesoin = null; }
 
@@ -353,7 +285,10 @@ export class BesoinsClientComponent implements OnInit {
     if (idx !== -1) {
       besoins.splice(idx, 1);
       localStorage.setItem('besoins', JSON.stringify(besoins));
-      this.chargerDonnees();
+      this.besoinsService.getBesoins().subscribe(besoins => {
+        this.derniersBesoins = besoins.filter(b => b.statut !== 'BROUILLON');
+        this.onFilterChange();
+      });
       this.message = "Besoin supprimé avec succès !";
       this.messageType = 'error';
       this.showToast = true;
@@ -370,7 +305,10 @@ export class BesoinsClientComponent implements OnInit {
     if (idx !== -1) {
       besoins[idx].statut = 'ENVOYEE';
       localStorage.setItem('besoins', JSON.stringify(besoins));
-      this.chargerDonnees();
+      this.besoinsService.getBesoins().subscribe(besoins => {
+        this.derniersBesoins = besoins.filter(b => b.statut !== 'BROUILLON');
+        this.onFilterChange();
+      });
       this.message = "Besoin soumis : en cours de traitement.";
       this.messageType = 'success';
       this.showToast = true;

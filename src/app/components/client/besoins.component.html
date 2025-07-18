@@ -112,24 +112,19 @@
                           'bg-gray-100 text-gray-500 border border-gray-300': bsn.statut === 'BROUILLON',
                           'bg-yellow-100 text-yellow-700 border border-yellow-300': bsn.statut === 'ENVOYEE',
                           'bg-green-100 text-green-700 border border-green-300': bsn.statut === 'VALIDEE',
-                          'bg-red-100 text-red-700 border border-red-300': bsn.statut === 'REJETEE',
-                          'bg-blue-100 text-blue-700 border border-blue-300': bsn.statut === 'LIVREE'
+                          'bg-red-100 text-red-700 border border-red-300': bsn.statut === 'REJETEE'
                         }">
                         {{ bsn.statut }}
                       </span>
                     </td>
                     <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ bsn.compte || '—' }}</td>
-                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ bsn.nombreArticles }} articles</td>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ bsn.quantite }} article{{ bsn.quantite > 1 ? 's' : '' }}</td>
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-2 relative">
                         <button *ngIf="bsn.statut === 'BROUILLON'" (click)="soumettreBesoin(bsn); $event.stopPropagation()" class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition text-blue-600" title="Soumettre le besoin">
                           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M2 12l19-7-7 19-2-8-8-2z"/>
                           </svg>
-                        </button>
-                        <button (click)="toggleDetailBesoin(bsn)" class="p-2 rounded-full hover:bg-fuchsia-100 dark:hover:bg-fuchsia-800 focus:outline-none focus:ring-2 focus:ring-fuchsia-400 transition text-fuchsia-500" [attr.aria-label]="bsn.showDetail ? 'Fermer le détail' : 'Voir le détail'">
-                          <svg *ngIf="!bsn.showDetail" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5c-7 0-9 7.5-9 7.5s2 7.5 9 7.5 9-7.5 9-7.5-2-7.5-9-7.5zm0 10a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg>
-                          <svg *ngIf="bsn.showDetail" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
                         <button *ngIf="bsn.statut === 'BROUILLON'" (click)="onEditBesoin(bsn)" class="p-2 rounded-full hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900/40 transition text-fuchsia-600" title="Modifier">
                           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -145,53 +140,6 @@
                             <path d="M10 11v6M14 11v6"/>
                           </svg>
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr *ngIf="bsn.showDetail">
-                    <td colspan="100" class="p-0 border-none">
-                      <div class="transition-all duration-300 overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 mx-4 my-2 shadow">
-                        <div class="mb-4">
-                          <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Motif</span>
-                          <div class="rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-gray-700 dark:text-gray-200 min-h-[40px] w-full">
-                            {{ bsn.motif || '—' }}
-                          </div>
-                        </div>
-                        <div class="mb-4">
-                          <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Motif de retour (en cas de rejet)</span>
-                          <div class="rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-4 min-h-[40px]"
-                               [ngClass]="bsn.motifRetour ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'">
-                            {{ bsn.motifRetour || 'Aucun motif de retour' }}
-                          </div>
-                        </div>
-                        <div class="mb-4">
-                          <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Catégorie de pièce</span>
-                          <div class="rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-gray-700 dark:text-gray-200 min-h-[40px] w-full">
-                            {{ bsn.categorie || '—' }}
-                          </div>
-                        </div>
-                        <div *ngIf="bsn.articles && bsn.articles.length > 0">
-                          <span class="font-semibold text-fuchsia-700 dark:text-fuchsia-200">Articles :</span>
-                          <div class="mt-8 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
-                            <table *ngIf="bsn.articles.length > 0" class="min-w-full text-sm align-baseline bg-white dark:bg-gray-900 rounded-2xl">
-                              <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-xs text-left text-gray-700 uppercase dark:text-gray-400 font-sans">
-                                <tr>
-                                  <th class="px-4 py-3 font-sans font-bold rounded-tl-2xl">Désignation</th>
-                                  <th class="px-4 py-3 font-sans font-bold">Unité</th>
-                                  <th class="px-4 py-3 font-sans font-bold">Quantité</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr *ngFor="let art of bsn.articles" class="border-b dark:border-gray-700 even:bg-gray-50 dark:even:bg-gray-900/20 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-900/30 transition-colors duration-200">
-                                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.article }}</td>
-                                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.unite }}</td>
-                                  <td class="px-4 py-3 text-gray-900 dark:text-white whitespace-nowrap">{{ art.quantite }}</td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                        <div *ngIf="!bsn.articles || bsn.articles.length === 0" class="text-gray-400 dark:text-gray-500">Aucun article pour ce besoin.</div>
                       </div>
                     </td>
                   </tr>
@@ -211,8 +159,7 @@
                     'bg-gray-100 text-gray-500 border border-gray-300': bsn.statut === 'BROUILLON',
                     'bg-yellow-100 text-yellow-700 border border-yellow-300': bsn.statut === 'ENVOYEE',
                     'bg-green-100 text-green-700 border border-green-300': bsn.statut === 'VALIDEE',
-                    'bg-red-100 text-red-700 border border-red-300': bsn.statut === 'REJETEE',
-                    'bg-blue-100 text-blue-700 border border-blue-300': bsn.statut === 'LIVREE'
+                    'bg-red-100 text-red-700 border border-red-300': bsn.statut === 'REJETEE'
                   }">
                   {{ bsn.statut }}
                 </span>
@@ -234,7 +181,7 @@
               <div class="font-bold text-lg text-fuchsia-700 dark:text-fuchsia-300 truncate max-w-[14rem] mb-1 relative">
                 <span class="relative z-10">{{ bsn.numero }}</span>
               </div>
-              <div class="text-xs text-gray-400 dark:text-gray-500 mb-1">{{ bsn.nombreArticles }} article{{ bsn.nombreArticles > 1 ? 's' : '' }}</div>
+              <div class="text-xs text-gray-400 dark:text-gray-500 mb-1">{{ bsn.quantite }} article{{ bsn.quantite > 1 ? 's' : '' }}</div>
               <div class="text-sm text-gray-700 dark:text-gray-200 truncate mb-1 flex items-center justify-between">Date création : <span class="font-semibold text-gray-700 dark:text-gray-200 ml-auto text-right">{{ bsn.date | date:'shortDate' }}</span></div>
               <div class="text-sm text-gray-700 dark:text-gray-200 truncate mb-1 flex items-center justify-between">Date début : <span class="font-semibold ml-auto text-right">{{ bsn.dateDebut | date:'shortDate' }}</span></div>
               <div class="text-sm text-gray-700 dark:text-gray-200 truncate mb-1 flex items-center justify-between">Date fin : <span class="font-semibold ml-auto text-right">{{ bsn.dateFin | date:'shortDate' }}</span></div>
@@ -404,8 +351,7 @@
                   'bg-gray-100 text-gray-500 border border-gray-300': selectedBesoin.statut === 'BROUILLON',
                   'bg-yellow-100 text-yellow-700 border border-yellow-300': selectedBesoin.statut === 'ENVOYEE',
                   'bg-green-100 text-green-700 border border-green-300': selectedBesoin.statut === 'VALIDEE',
-                  'bg-red-100 text-red-700 border border-red-300': selectedBesoin.statut === 'REJETEE',
-                  'bg-blue-100 text-blue-700 border border-blue-300': selectedBesoin.statut === 'LIVREE'
+                  'bg-red-100 text-red-700 border border-red-300': selectedBesoin.statut === 'REJETEE'
                 }">
                 {{ selectedBesoin.statut }}
               </span>
