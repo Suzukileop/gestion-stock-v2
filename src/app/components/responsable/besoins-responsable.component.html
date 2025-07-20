@@ -49,35 +49,69 @@
         <ng-container *ngIf="viewMode === 'table'">
           <div class="overflow-x-auto max-h-[60vh] overflow-y-auto rounded-2xl shadow border border-violet-100 dark:border-violet-900/40 bg-white dark:bg-gray-900">
             <table class="min-w-full text-sm align-baseline">
-              <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-xs text-left text-gray-700 uppercase dark:text-gray-400 font-sans">
+              <thead class="sticky top-0 z-10 bg-gray-100 dark:bg-gray-700 text-xs text-left text-gray-700 uppercase dark:text-gray-400 font-sans">
                 <tr>
                   <th class="px-4 py-3 font-sans font-bold">Numéro</th>
                   <th class="px-4 py-3 font-sans font-bold">Date</th>
-                  <th class="px-4 py-3 font-sans font-bold">Motif</th>
                   <th class="px-4 py-3 font-sans font-bold">Catégorie</th>
-                  <th class="px-4 py-3 font-sans font-bold">Article</th>
-                  <th class="px-4 py-3 font-sans font-bold">Quantité</th>
                   <th class="px-4 py-3 font-sans font-bold">Compte</th>
                   <th class="px-4 py-3 font-sans font-bold">Statut</th>
                   <th class="px-4 py-3 font-sans font-bold">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let besoin of filteredBesoins">
-                  <td class="px-4 py-2">{{ besoin.numero }}</td>
-                  <td class="px-4 py-2">{{ besoin.date | date:'shortDate' }}</td>
-                  <td class="px-4 py-2">{{ besoin.motif }}</td>
-                  <td class="px-4 py-2">{{ besoin.categorie }}</td>
-                  <td class="px-4 py-2">{{ besoin.article }}</td>
-                  <td class="px-4 py-2">{{ besoin.quantite }}</td>
-                  <td class="px-4 py-2">{{ besoin.compte }}</td>
-                  <td class="px-4 py-2">{{ besoin.statut }}</td>
-                  <td class="px-4 py-2">
-                    <button *ngIf="besoin.statut === 'ENVOYEE'" (click)="changerStatut(besoin, 'EN_COURS')" class="px-2 py-1 bg-blue-200 rounded">En cours</button>
-                    <button *ngIf="besoin.statut === 'EN_COURS'" (click)="changerStatut(besoin, 'VALIDEE')" class="px-2 py-1 bg-green-200 rounded">Valider</button>
-                    <button *ngIf="besoin.statut === 'EN_COURS'" (click)="changerStatut(besoin, 'REJETEE')" class="px-2 py-1 bg-red-200 rounded">Rejeter</button>
-                  </td>
-                </tr>
+                <ng-container *ngFor="let besoin of filteredBesoins">
+                  <tr class="border-b dark:border-gray-700 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors duration-200 cursor-pointer">
+                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ besoin.numero }}</td>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ besoin.date | date:'shortDate' }}</td>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ besoin.categorie }}</td>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ besoin.compte }}</td>
+                    <td class="px-4 py-3">
+                      <span class="px-3 py-1 rounded-full text-xs font-semibold shadow border"
+                        [ngClass]="{
+                          'bg-gray-100 text-gray-500 border-gray-300': besoin.statut === 'BROUILLON',
+                          'bg-yellow-100 text-yellow-700 border-yellow-300': besoin.statut === 'ENVOYEE',
+                          'bg-blue-100 text-blue-700 border-blue-300': besoin.statut === 'EN_COURS',
+                          'bg-green-100 text-green-700 border-green-300': besoin.statut === 'VALIDEE',
+                          'bg-red-100 text-red-700 border-red-300': besoin.statut === 'REJETEE'
+                        }">
+                        {{ besoin.statut }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 flex gap-2 items-center justify-end whitespace-nowrap">
+                      <button *ngIf="besoin.statut === 'ENVOYEE'" (click)="changerStatut(besoin, 'EN_COURS')" class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition" title="En cours">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12l19-7-7 19-2-8-8-2z"/></svg>
+                      </button>
+                      <button *ngIf="besoin.statut === 'EN_COURS'" (click)="changerStatut(besoin, 'VALIDEE')" class="p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-900/40 transition" title="Valider">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                      </button>
+                      <button *ngIf="besoin.statut === 'EN_COURS' && !showMotifRejet[besoin.id]" (click)="changerStatut(besoin, 'REJETEE')" class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/40 transition" title="Rejeter">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><rect x="5" y="6" width="14" height="14" rx="2"/><path d="M10 11v6M14 11v6"/></svg>
+                      </button>
+                      <button (click)="toggleDetails(besoin)" class="p-2 rounded-full hover:bg-violet-100 dark:hover:bg-violet-900/40 transition" title="Afficher les détails">
+                        <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5c-7 0-9 7.5-9 7.5s2 7.5 9 7.5 9-7.5 9-7.5-2-7.5-9-7.5zm0 10a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="showDetails[besoin.id]">
+                    <td colspan="100" class="p-0 border-none">
+                      <div class="transition-all duration-300 overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 mx-4 my-2 shadow">
+                        <div class="mb-2">
+                          <span class="font-semibold text-violet-700 dark:text-violet-200 block mb-1">Motif :</span>
+                          <div class="rounded-lg border border-violet-200 dark:border-violet-700 bg-violet-50 dark:bg-violet-900/30 p-3 text-gray-700 dark:text-gray-200">
+                            {{ besoin.motif }}
+                          </div>
+                        </div>
+                        <div *ngIf="besoin.motifRetour" class="mb-2">
+                          <span class="font-semibold text-red-700 dark:text-red-300 block mb-1">Motif de rejet :</span>
+                          <div class="rounded-lg border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/30 p-3 text-red-700 dark:text-red-200">
+                            {{ besoin.motifRetour }}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-container>
               </tbody>
             </table>
           </div>
@@ -96,7 +130,11 @@
               <div class="flex items-center gap-2 mt-2">
                 <button *ngIf="besoin.statut === 'ENVOYEE'" (click)="changerStatut(besoin, 'EN_COURS')" class="px-2 py-1 bg-blue-200 rounded">En cours</button>
                 <button *ngIf="besoin.statut === 'EN_COURS'" (click)="changerStatut(besoin, 'VALIDEE')" class="px-2 py-1 bg-green-200 rounded">Valider</button>
-                <button *ngIf="besoin.statut === 'EN_COURS'" (click)="changerStatut(besoin, 'REJETEE')" class="px-2 py-1 bg-red-200 rounded">Rejeter</button>
+                <button *ngIf="besoin.statut === 'EN_COURS' && !showMotifRejet[besoin.id]" (click)="changerStatut(besoin, 'REJETEE')" class="px-2 py-1 bg-red-200 rounded">Rejeter</button>
+                <div *ngIf="showMotifRejet[besoin.id]">
+                  <input type="text" [(ngModel)]="motifRejet[besoin.id]" placeholder="Motif du rejet" class="border rounded px-2 py-1 text-sm" />
+                  <button (click)="validerMotifRejet()" class="px-2 py-1 bg-red-600 text-white rounded ml-2">Valider</button>
+                </div>
               </div>
             </div>
           </div>
@@ -104,4 +142,24 @@
       </div>
     </div>
   </main>
+</div>
+
+<!-- Modal Motif de rejet -->
+<div *ngIf="showMotifRejetModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="w-full max-w-md mx-auto my-8 flex flex-col bg-white dark:bg-gray-900/90 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-2xl relative animate-fade-in">
+    <div class="flex items-center justify-between px-6 pt-6 pb-4">
+      <h2 class="text-xl font-bold text-red-700 dark:text-red-300 w-full text-center">Motif du rejet</h2>
+      <button (click)="closeMotifRejetModal()" class="absolute top-6 right-6 text-gray-400 hover:text-red-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="px-6 pb-6">
+      <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-200">Merci de préciser le motif du rejet :</label>
+      <textarea [(ngModel)]="motifRejet[besoinRejetModal!.id]" rows="3" class="w-full border border-gray-300 dark:border-gray-700 rounded-lg p-2 focus:ring-red-500 focus:border-red-500 dark:bg-gray-800 dark:text-white"></textarea>
+      <div class="flex justify-end mt-4 gap-2">
+        <button (click)="closeMotifRejetModal()" class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-800">Annuler</button>
+        <button (click)="validerMotifRejet()" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Valider</button>
+      </div>
+    </div>
+  </div>
 </div> 

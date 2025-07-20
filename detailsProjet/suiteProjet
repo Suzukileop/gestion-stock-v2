@@ -1,0 +1,50 @@
+2. Ce qui manque ou doit être amélioré (selon le support et la logique métier)
+A. Commandes du client visibles et traitables par le responsable
+Affichage des commandes envoyées par les clients dans une section dédiée côté responsable.
+Actions possibles pour le responsable :
+Valider une commande (statut VALIDEE)
+Rejeter une commande (statut REJETEE, avec motif)
+Voir le détail de la commande (articles, quantités, motif, etc.)
+Workflow :
+Une commande validée peut ensuite être livrée (section livraison).
+Une commande rejetée doit afficher le motif de rejet côté client.
+B. Livraison & Affectation
+Section Livraison :
+Afficher les commandes validées à livrer.
+Permettre la livraison totale ou partielle.
+Section Affectation :
+Affecter les articles livrés à un détenteur (individu ou service).
+C. Inventaire
+Section Inventaire :
+Afficher l’état du stock, seuils, alertes, mouvements.
+D. Historique et reporting
+Historique des livraisons, mouvements, affectations.
+Export Excel pour les besoins, commandes, inventaire.
+3. Liste de tâches à faire pour continuer jusqu’à la fin
+1. Commandes côté responsable
+[ ] Créer une section "Commandes" dans le menu responsable.
+[ ] Afficher la liste des commandes envoyées par les clients.
+[ ] Ajouter actions : Valider, Rejeter (avec motif), Voir détails.
+[ ] Synchroniser le statut et le motif de rejet côté client.
+2. Livraison
+[ ] Créer une section "Livraison & Affectation".
+[ ] Afficher les commandes validées à livrer.
+[ ] Permettre la livraison (total/partiel), décrémenter le stock.
+3. Affectation
+[ ] Permettre l’affectation des articles livrés à un détenteur.
+[ ] Saisie des infos du détenteur, état de l’objet, etc.
+4. Inventaire
+[ ] Créer une section "Inventaire".
+[ ] Afficher l’état du stock, seuils, alertes, mouvements.
+5. Historique et reporting
+[ ] Historique des livraisons, mouvements, affectations.
+[ ] Export Excel pour les besoins, commandes, inventaire.
+6. Améliorations UX/UI
+[ ] Notifications (changement de statut, livraison, etc.).
+[ ] Harmonisation des designs sur toutes les sections.
+[ ] Sécurité (vérification des rôles, accès, etc.).
+4. Proposition de workflow pour la suite
+Implémenter la gestion des commandes côté responsable (affichage, validation, rejet, détails).
+Enchaîner sur la livraison et l’affectation.
+Finaliser l’inventaire et l’historique.
+Ajouter les exports et les notifications.

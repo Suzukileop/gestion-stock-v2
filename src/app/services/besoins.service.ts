@@ -14,6 +14,7 @@ export interface Besoin {
   quantite: number;
   compte: string;
   statut: 'BROUILLON' | 'ENVOYEE' | 'EN_COURS' | 'VALIDEE' | 'REJETEE';
+  motifRetour?: string;
 }
 
 const STORAGE_KEY = 'besoins-stock';

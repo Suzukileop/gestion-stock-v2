@@ -19,6 +19,11 @@ export class BesoinsResponsableComponent implements OnInit {
   searchTerm = '';
   filterStatut = '';
   viewMode: 'table' | 'cards' = 'table';
+  motifRejet: { [id: number]: string } = {};
+  showMotifRejet: { [id: number]: boolean } = {};
+  showMotifRejetModal: boolean = false;
+  besoinRejetModal: Besoin | null = null;
+  showDetails: { [id: number]: boolean } = {};
 
   constructor(private besoinsService: BesoinsService) {}
 
@@ -57,7 +62,35 @@ export class BesoinsResponsableComponent implements OnInit {
   }
 
   changerStatut(besoin: Besoin, statut: Besoin['statut']) {
-    this.besoinsService.updateStatut(besoin.id, statut);
+    if (statut === 'REJETEE') {
+      this.besoinRejetModal = besoin;
+      this.showMotifRejetModal = true;
+      this.motifRejet[besoin.id] = '';
+    } else {
+      this.besoinsService.updateStatut(besoin.id, statut);
+      this.onFilterChange();
+    }
+  }
+
+  validerMotifRejet() {
+    if (!this.besoinRejetModal) return;
+    this.besoinsService.updateStatut(this.besoinRejetModal.id, 'REJETEE');
+    // Mettre à jour le motifRetour
+    const besoins = (this.filteredBesoins || []).map(b =>
+      b.id === this.besoinRejetModal!.id ? { ...b, motifRetour: this.motifRejet[this.besoinRejetModal!.id] } : b
+    );
+    localStorage.setItem('besoins-stock', JSON.stringify(besoins));
+    this.showMotifRejetModal = false;
+    this.besoinRejetModal = null;
     this.onFilterChange();
+  }
+
+  closeMotifRejetModal() {
+    this.showMotifRejetModal = false;
+    this.besoinRejetModal = null;
+  }
+
+  toggleDetails(besoin: Besoin) {
+    this.showDetails[besoin.id] = !this.showDetails[besoin.id];
   }
 } 

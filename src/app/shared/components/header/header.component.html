@@ -16,13 +16,14 @@
         </button>
         <div *ngIf="userMenuOpen" class="user-dropdown absolute right-0 mt-2 w-56 rounded-xl shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 z-[99999] animate-fade-in">
           <div class="flex flex-col items-start p-4 border-b border-gray-100 dark:border-gray-700 gap-1.5">
-            <div class="text-base font-bold text-fuchsia-700 dark:text-fuchsia-200 mb-1">Responsable</div>
+            <div class="text-base font-bold text-fuchsia-700 dark:text-fuchsia-200 mb-1">{{ user?.role ? (user.role | titlecase) : '' }}</div>
             <hr class="w-full border-gray-200 dark:border-gray-700 mb-2" />
             <div class="text-sm font-bold text-fuchsia-700 dark:text-fuchsia-200 mb-1">{{ user?.matricule }}</div>
             <div class="text-sm font-bold text-gray-900 dark:text-white mb-1">{{ user?.nom }}</div>
             <div class="text-sm text-gray-900 dark:text-white mb-1">{{ user?.prenom }}</div>
             <div class="text-sm text-gray-500 dark:text-gray-300 mb-1">{{ user?.contact }}</div>
             <div class="text-sm text-gray-500 dark:text-gray-300">{{ user?.mail }}</div>
+            <div class="text-sm text-gray-500 dark:text-gray-300 mb-1">{{ user?.telephone }}</div>
           </div>
         </div>
       </div>

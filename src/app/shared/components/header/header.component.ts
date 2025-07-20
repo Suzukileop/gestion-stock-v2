@@ -11,13 +11,12 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 export class HeaderComponent {
   menuOpen = false;
   userMenuOpen = false;
-  user = {
-    nom: 'Rakoto',
-    prenom: 'Responsable',
-    matricule: '123456',
-    contact: '+261 34 12 345 67',
-    mail: 'rakoto.responsable@email.com'
-  };
+  user: any;
+
+  constructor() {
+    const userStr = localStorage.getItem('currentUser');
+    this.user = userStr ? JSON.parse(userStr) : {};
+  }
 
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
