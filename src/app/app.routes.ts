@@ -16,6 +16,7 @@ export const routes: Routes = [
   { path: 'client/commandes', loadComponent: () => import('./components/client/commandes/commandes.component').then(m => m.CommandesClientComponent) },
   { path: 'client/besoins', loadComponent: () => import('./components/client/besoins.component').then(m => m.BesoinsClientComponent) },
   { path: 'responsable/besoins', loadComponent: () => import('./components/responsable/besoins-responsable.component').then(m => m.BesoinsResponsableComponent) },
+  { path: 'responsable/commandes', loadComponent: () => import('./components/responsable/commandes-responsable.component').then(m => m.CommandesResponsableComponent) },
   // Ajoutez ici d'autres routes pour votre application (tableau de bord, etc.)
   { path: '**', redirectTo: '/login' } // Rediriger les routes inconnues vers la page de connexion
 ];

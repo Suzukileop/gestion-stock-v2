@@ -56,6 +56,11 @@ export class CommandesClientComponent implements OnInit {
     if (this.commandeForm.categorie) {
       this.onCategorieChange();
     }
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'commandes') {
+        this.chargerDonnees();
+      }
+    });
   }
 
   chargerDonnees() {
