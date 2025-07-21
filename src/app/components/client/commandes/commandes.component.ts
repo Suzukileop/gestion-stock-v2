@@ -65,8 +65,8 @@ export class CommandesClientComponent implements OnInit {
 
   chargerDonnees() {
     const commandes = JSON.parse(localStorage.getItem('commandes') || '[]');
-    const clientConnecte = JSON.parse(localStorage.getItem('user_connecte') || '{}');
-    const commandesClient = commandes.filter((cmd: any) => cmd.client_id === clientConnecte.id);
+    const clientConnecte = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const commandesClient = commandes.filter((cmd: any) => cmd.client_id === clientConnecte.matricule);
     commandesClient.forEach((cmd: any) => cmd.showDetail = false);
     this.commandesEnCours = commandesClient.filter((cmd: any) => ['ENVOYEE', 'VALIDEE'].includes(cmd.statut)).length;
     this.commandesLivrees = commandesClient.filter((cmd: any) => cmd.statut === 'LIVREE').length;
@@ -133,7 +133,7 @@ export class CommandesClientComponent implements OnInit {
     if (!this.commandeMeta.compte) { this.metaErrors.compte = true; valid = false; }
     if (!this.commandeMeta.motif) { this.metaErrors.motif = true; valid = false; }
     if (!valid) return;
-    const clientConnecte = JSON.parse(localStorage.getItem('user_connecte') || '{}');
+    const clientConnecte = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const commandes = JSON.parse(localStorage.getItem('commandes') || '[]');
     if (this.isEditMode && this.editedCommandeId !== null) {
       // Vérifier si modification réelle
@@ -189,7 +189,7 @@ export class CommandesClientComponent implements OnInit {
     const nouvelleCommande = {
       id: Date.now(),
       numero: dernierNumero.toString(),
-      client_id: clientConnecte.id,
+      client_id: clientConnecte.matricule || clientConnecte.id || 'inconnu',
       date: new Date().toISOString(),
       statut: 'BROUILLON',
       articles: [...this.articlesCommande],
@@ -200,6 +200,7 @@ export class CommandesClientComponent implements OnInit {
       motifRetour: null,
       showDetail: false
     };
+    console.log('[DEBUG] Nouvelle commande créée:', nouvelleCommande);
     commandes.push(nouvelleCommande);
     localStorage.setItem('commandes', JSON.stringify(commandes));
     this.chargerDonnees();
@@ -436,5 +437,12 @@ export class CommandesClientComponent implements OnInit {
 
   max(a: number, b: number): number {
     return Math.max(a, b);
+  }
+
+  // Retourne l'unité administrative à partir du matricule
+  getUniteAdmin(matricule: string): string {
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find((u: any) => u.matricule === matricule);
+    return user?.unite_administrative || '—';
   }
 } 

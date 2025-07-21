@@ -34,6 +34,15 @@ export class CommandesResponsableComponent implements OnInit {
   searchTerm = '';
   filterStatut = '';
 
+  showValidationModal = false;
+  commandeAValider: Commande | null = null;
+
+  notification = {
+    show: false,
+    message: '',
+    type: 'success' as 'success' | 'error'
+  };
+
   ngOnInit() {
     this.loadCommandes();
   }
@@ -63,7 +72,8 @@ export class CommandesResponsableComponent implements OnInit {
       this.showMotifRejetModal = true;
       this.motifRejet[cmd.id] = '';
     } else {
-      this.updateCommandeStatut(cmd, statut);
+      this.commandeAValider = cmd;
+      this.showValidationModal = true;
     }
   }
 
@@ -71,7 +81,20 @@ export class CommandesResponsableComponent implements OnInit {
     if (!this.commandeRejetModal || this.commandeRejetModal.id === undefined || this.commandeRejetModal.id === null) return;
     this.updateCommandeStatut(this.commandeRejetModal, 'REJETEE', this.motifRejet[this.commandeRejetModal.id]);
     this.showMotifRejetModal = false;
+    this.showNotification('La commande a été rejetée.', 'error');
     this.commandeRejetModal = null;
+  }
+
+  confirmValidation() {
+    if (!this.commandeAValider) return;
+    this.updateCommandeStatut(this.commandeAValider, 'VALIDEE');
+    this.showNotification(`La commande a été validée.`, 'success');
+    this.closeValidationModal();
+  }
+
+  closeValidationModal() {
+    this.showValidationModal = false;
+    this.commandeAValider = null;
   }
 
   closeMotifRejetModal() {
@@ -93,5 +116,14 @@ export class CommandesResponsableComponent implements OnInit {
   toggleDetails(cmd: Commande) {
     if (cmd.id === undefined || cmd.id === null) return;
     this.showDetails[cmd.id] = !this.showDetails[cmd.id];
+  }
+
+  showNotification(message: string, type: 'success' | 'error') {
+    this.notification.message = message;
+    this.notification.type = type;
+    this.notification.show = true;
+    setTimeout(() => {
+      this.notification.show = false;
+    }, 3000);
   }
 } 

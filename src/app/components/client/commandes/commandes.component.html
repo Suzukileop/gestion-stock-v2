@@ -94,6 +94,8 @@
                   <th class="px-4 py-3 font-sans font-bold">Date</th>
                   <th class="px-4 py-3 font-sans font-bold">Statut</th>
                   <th class="px-4 py-3 font-sans font-bold">Compte</th>
+                  <th class="px-4 py-3 font-sans font-bold">Matricule</th>
+                  <th class="px-4 py-3 font-sans font-bold">Unité administrative</th>
                   <th class="px-4 py-3 font-sans font-bold">Articles</th>
                   <th class="px-4 py-3 font-sans font-bold">Actions</th>
               </tr>
@@ -116,6 +118,8 @@
                     </span>
                   </td>
                     <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ cmd.compte || '—' }}</td>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ cmd.client_id || '—' }}</td>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ getUniteAdmin(cmd.client_id) }}</td>
                     <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ cmd.nombreArticles }} articles</td>
                   <td class="px-4 py-3">
                       <div class="flex items-center gap-2 relative">
@@ -146,8 +150,12 @@
                   </td>
                 </tr>
                 <tr *ngIf="cmd.showDetail">
-                    <td colspan="6" class="p-0 border-none">
+                    <td colspan="8" class="p-0 border-none">
                       <div class="transition-all duration-300 overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 mx-4 my-2 shadow">
+                        <div class="flex flex-row gap-8 mb-4">
+                          <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Matricule</span><span class="text-gray-900 dark:text-white">{{ cmd.client_id || '—' }}</span></div>
+                          <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Unité administrative</span><span class="text-gray-900 dark:text-white">{{ getUniteAdmin(cmd.client_id) }}</span></div>
+                        </div>
                         <div class="mb-4">
                           <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Motif</span>
                           <div class="rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-gray-700 dark:text-gray-200 min-h-[40px] w-full">
@@ -245,6 +253,7 @@
               <div class="font-bold text-lg text-fuchsia-700 dark:text-fuchsia-300 truncate max-w-[14rem] mb-1 relative">
                 <span class="relative z-10">{{ cmd.numero }}</span>
               </div>
+              <div class="text-xs text-gray-400 dark:text-gray-500 mb-1">Client ID : <span class="font-semibold">{{ cmd.client_id || '—' }}</span></div>
               <div class="text-xs text-gray-400 dark:text-gray-500 mb-1">{{ cmd.nombreArticles }} article{{ cmd.nombreArticles > 1 ? 's' : '' }}</div>
               <div class="text-sm text-gray-700 dark:text-gray-200 truncate mb-1 flex items-center justify-between">Date : <span class="font-semibold text-gray-700 dark:text-gray-200 ml-auto text-right">{{ cmd.date | date:'shortDate' }}</span></div>
               <div class="text-sm text-gray-700 dark:text-gray-200 truncate mb-1 flex items-center justify-between">Compte : <span class="font-semibold ml-auto text-right">{{ cmd.compte }}</span></div>
@@ -406,6 +415,8 @@
         </span>
       </div>
             <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Compte</span><span class="text-gray-900 dark:text-white">{{ selectedCommande.compte }}</span></div>
+            <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Matricule</span><span class="text-gray-900 dark:text-white">{{ selectedCommande.client_id || '—' }}</span></div>
+            <div><span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">Unité administrative</span><span class="text-gray-900 dark:text-white">{{ getUniteAdmin(selectedCommande.client_id) }}</span></div>
           </div>
         </div>
       </div>
