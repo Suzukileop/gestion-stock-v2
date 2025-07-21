@@ -17,6 +17,7 @@ export class SidebarResponsableComponent implements OnInit {
     { label: 'Inventaire', icon: 'clipboard-list', route: '/responsable/inventaire' },
     { label: 'Expression de besoins', icon: 'document-text', route: '/responsable/besoins' },
     { label: 'Livraison & Affectation', icon: 'truck', route: '/responsable/affectations' },
+    { label: 'Commandes clients', icon: 'calendar', route: '/responsable/commandes' },
   ];
 
   constructor(private router: Router) {}

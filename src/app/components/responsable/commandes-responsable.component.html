@@ -1,3 +1,4 @@
+<app-header></app-header>
 <div class="flex gap-4 pt-20 px-4 min-h-screen mx-auto" style="max-width: 100rem;">
   <aside class="h-100vh sticky top-20 w-64 ">
     <sidebar-responsable></sidebar-responsable>
@@ -106,7 +107,7 @@
     </div>
     <div class="px-6 pb-6">
       <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-200">Merci de préciser le motif du rejet :</label>
-      <textarea [(ngModel)]="motifRejet[commandeRejetModal?.id]" rows="3" class="w-full border border-gray-300 dark:border-gray-700 rounded-lg p-2 focus:ring-red-500 focus:border-red-500 dark:bg-gray-800 dark:text-white"></textarea>
+      <textarea [(ngModel)]="motifRejet[commandeRejetModal?.id ?? 0]" rows="3" class="w-full border border-gray-300 dark:border-gray-700 rounded-lg p-2 focus:ring-red-500 focus:border-red-500 dark:bg-gray-800 dark:text-white"></textarea>
       <div class="flex justify-end mt-4 gap-2">
         <button (click)="closeMotifRejetModal()" class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-800">Annuler</button>
         <button (click)="validerMotifRejet()" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Valider</button>

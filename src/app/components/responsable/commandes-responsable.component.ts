@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarResponsableComponent } from './sidebar-responsable.component';
+import { HeaderComponent } from '../../shared/components/header/header.component';
 
 interface Commande {
   id: number;
@@ -19,7 +20,7 @@ interface Commande {
 @Component({
   selector: 'commandes-responsable',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, SidebarResponsableComponent],
+  imports: [CommonModule, FormsModule, DatePipe, SidebarResponsableComponent, HeaderComponent],
   templateUrl: './commandes-responsable.component.html',
   styleUrls: ['./commandes-responsable.component.css']
 })
@@ -56,6 +57,7 @@ export class CommandesResponsableComponent implements OnInit {
   }
 
   changerStatut(cmd: Commande, statut: Commande['statut']) {
+    if (cmd.id === undefined || cmd.id === null) return;
     if (statut === 'REJETEE') {
       this.commandeRejetModal = cmd;
       this.showMotifRejetModal = true;
@@ -66,7 +68,7 @@ export class CommandesResponsableComponent implements OnInit {
   }
 
   validerMotifRejet() {
-    if (!this.commandeRejetModal) return;
+    if (!this.commandeRejetModal || this.commandeRejetModal.id === undefined || this.commandeRejetModal.id === null) return;
     this.updateCommandeStatut(this.commandeRejetModal, 'REJETEE', this.motifRejet[this.commandeRejetModal.id]);
     this.showMotifRejetModal = false;
     this.commandeRejetModal = null;
@@ -89,6 +91,7 @@ export class CommandesResponsableComponent implements OnInit {
   }
 
   toggleDetails(cmd: Commande) {
+    if (cmd.id === undefined || cmd.id === null) return;
     this.showDetails[cmd.id] = !this.showDetails[cmd.id];
   }
 } 
