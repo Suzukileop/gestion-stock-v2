@@ -1,4 +1,4 @@
-Nous allons concevoir une application de gestion de stock (GS) pour le Ministère de l'Économie et des Finances. L'application doit permettre la gestion des stocks et le suivi du matériel. Elle aura plusieurs types de comptes : Client, Responsable, admin.
+Nous allons concevoir une application de gestion de stock (GS)s. L'application doit permettre la gestion des stocks et le suivi du matériel. Elle aura plusieurs types de comptes : Client, Responsable, admin.
 
 ## Analyse des besoins
 
@@ -34,9 +34,9 @@ L'application doit offrir les fonctionnalités suivantes :
 
 - Consulter l'inventaire du jour.
 
-4. **Compte daff** :
-
-
+4. **Compte daff ou admin** :
+// il y rien pour l'instant 
+- gestion des utilisateur 
 
 ## Conception de la base de données
 

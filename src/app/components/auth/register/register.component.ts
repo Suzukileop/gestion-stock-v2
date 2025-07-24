@@ -86,6 +86,7 @@ export class RegisterComponent implements OnInit {
         prenom: 'Client',
         email: 'client@minef.com',
         telephone: '+261340000002',
+        
         password: 'Client@1234',
         unite_administrative: 'SERVICE DU PERSONNEL',
         role: 'CLIENT',
