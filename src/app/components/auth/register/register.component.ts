@@ -25,6 +25,9 @@ export class RegisterComponent implements OnInit {
   showConfirmPassword = false;
   showSuccessDialog = false;
 
+  // test copilot
+  Matricule = 'Ex: 123456';
+
   mockUnites = [
     { id: 1, nom: "DIRECTION DU PATRIMOINE DE L ETAT" },
     { id: 2, nom: "PERSONNE RESPONSABLE DES MARCHES PUBLICS DGBF" },
@@ -86,7 +89,7 @@ export class RegisterComponent implements OnInit {
         prenom: 'Client',
         email: 'client@minef.com',
         telephone: '+261340000002',
-        
+
         password: 'Client@1234',
         unite_administrative: 'SERVICE DU PERSONNEL',
         role: 'CLIENT',
@@ -182,4 +185,4 @@ export class RegisterComponent implements OnInit {
       window.location.href = '/confirmation-inscription';
     }, 3500);
   }
-} 
+}
